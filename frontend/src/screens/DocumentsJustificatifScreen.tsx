@@ -1,11 +1,7 @@
 // ============================================================
 //  frontend/screens/DocumentsJustificatifsScreen.tsx
-//  ✅ Affichage OCR épuré — ZERO score/pourcentage côté utilisateur
-//  ✅ Logique 3 tentatives max par document avec blocage
-//  ✅ Alerte "dossier signalé" à la dernière tentative ratée
-//  ✅ Logs détaillés conservés en console dev uniquement
-//  ✅ UploadBox désactivée si document bloqué
-//  ✅ [FIX] Bouton retour → toujours vers FATCAScreen (SANS params E-Houwiya)
+//  ✅ CORRECTION : Upload réel du fichier vers le backend
+//     au lieu de stocker l'URI locale
 // ============================================================
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -19,7 +15,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
 import colors from '../../constants/colors';
 import { NavigationProp, RouteProp, OcrFormData } from '../types/navigation';
-import { saveDocuments } from '../services/customerApi';
+import { saveDocuments, uploadDocument } from '../services/customerApi'; // ✅ NOUVEAU: import uploadDocument
 import { useOcrScan, OcrDocKey } from '../hooks/useOcrScan';
 import { OcrResultBadge } from '../components/common/OcrResultBadge';
 import { DocumentScanGuide } from '../components/common/DocumentScanGuide';
@@ -36,6 +32,7 @@ interface UploadedDocument {
   size: number;
   type: string;
   uri: string | null;
+  serverPath?: string; // ✅ NOUVEAU : chemin serveur après upload
 }
 
 type UploadType = 'cinRecto' | 'cinVerso' | 'passport';
@@ -188,6 +185,9 @@ const UploadBox: React.FC<{
                 </View>
               </View>
               <Text style={styles.fileSize}>{fmt(document.size)}</Text>
+              {document.serverPath && (
+                <Text style={{ fontSize: 9, color: colors.neutral.gray500, marginTop: 2 }}>✓ Sauvegardé</Text>
+              )}
             </View>
           </View>
           {!disabled && (
@@ -259,6 +259,7 @@ const DocumentsJustificatifsScreen: React.FC<Props> = ({ navigation, route }) =>
   const [cinVersoDocument, setCinVersoDocument] = useState<UploadedDocument | null>(null);
   const [passportDocument, setPassportDocument] = useState<UploadedDocument | null>(null);
   const [usePassport, setUsePassport]           = useState(false);
+  const [uploadingDoc, setUploadingDoc]         = useState<UploadType | null>(null);
 
   // ── États UI ─────────────────────────────────────────────
   const [isLoading, setIsLoading] = useState(false);
@@ -269,11 +270,6 @@ const DocumentsJustificatifsScreen: React.FC<Props> = ({ navigation, route }) =>
     cinRecto: null,
     passport: null,
   });
-
-  // ── Sauvegarde auto en attente post-OCR ──────────────────
-  const [pendingSave, setPendingSave] = useState<{
-    type: UploadType; doc: UploadedDocument;
-  } | null>(null);
 
   // ── Permissions au montage ────────────────────────────────
   useEffect(() => {
@@ -294,56 +290,88 @@ const DocumentsJustificatifsScreen: React.FC<Props> = ({ navigation, route }) =>
     })();
   }, []);
 
-  // ── Sauvegarde auto après OCR validé ─────────────────────
-  useEffect(() => {
-    if (!pendingSave || ocrState.isScanning) return;
-    const { type, doc } = pendingSave;
-    const key    = type === 'passport' ? 'passport' : 'cinRecto';
-    const result = ocrResults[key];
-    if (!result) return;
-    const isValid = result.matchStatus === 'MATCH' ||
-      (result.matchStatus === 'PARTIAL' && result.canProceed === true);
-    if (isValid) autoSaveDocument(type, doc);
-    setPendingSave(null);
-  }, [ocrResults, ocrState.isScanning, pendingSave]);
-
-  // ── Sauvegarde silencieuse ────────────────────────────────
-  const autoSaveDocument = async (type: UploadType, doc: UploadedDocument) => {
+  // ✅ NOUVELLE FONCTION : Upload réel vers le backend
+  const uploadFileToServer = async (
+    type: UploadType,
+    uri: string,
+    fileName: string
+  ): Promise<string | null> => {
     try {
-      await saveDocuments(customerId, {
-        usePassport,
-        idCardFrontPath: (type === 'cinRecto' ? doc.uri : cinRectoDocument?.uri ?? null) as string | null,
-        idCardBackPath:  (type === 'cinVerso' ? doc.uri : cinVersoDocument?.uri  ?? null) as string | null,
-        passportPath:    (type === 'passport' ? doc.uri : passportDocument?.uri  ?? null) as string | null,
-      });
-      console.log('[AutoSave] ✅', type);
-    } catch (err) {
-      console.warn('[AutoSave] ⚠️', err);
+      setUploadingDoc(type);
+      console.log(`[Upload] Début upload ${type} vers serveur...`);
+      
+      const serverPath = await uploadDocument(customerId, type, uri, fileName);
+      
+      console.log(`[Upload] ✅ Succès ${type} → ${serverPath}`);
+      return serverPath;
+    } catch (err: any) {
+      console.error(`[Upload] ❌ Erreur ${type}:`, err);
+      Alert.alert('Erreur', `Impossible d'uploader le document: ${err.message}`);
+      return null;
+    } finally {
+      setUploadingDoc(null);
     }
   };
 
-  // ── Setter document ───────────────────────────────────────
-  const setDocument = (type: UploadType, doc: UploadedDocument | null) => {
-    if (type === 'cinRecto')      setCinRectoDocument(doc);
+  // ✅ NOUVELLE FONCTION : Traitement complet (compression + upload + OCR + BDD)
+  const processAndUpload = useCallback(async (type: UploadType, rawUri: string) => {
+    // 1. Compression
+    const compressed = await compressImage(rawUri);
+    const uri = compressed?.uri ?? rawUri;
+    const fileSize = compressed?.fileSize ?? 0;
+    const fileName = `atb_${type}_${Date.now()}.jpg`;
+
+    // 2. Upload vers le serveur (obtient le chemin serveur)
+    const serverPath = await uploadFileToServer(type, uri, fileName);
+    if (!serverPath) return;
+
+    // 3. Mise à jour locale
+    const doc: UploadedDocument = {
+      name: fileName,
+      size: fileSize,
+      type: 'image/jpeg',
+      uri: uri,
+      serverPath: serverPath,
+    };
+    
+    if (type === 'cinRecto') setCinRectoDocument(doc);
     else if (type === 'cinVerso') setCinVersoDocument(doc);
-    else                          setPassportDocument(doc);
-  };
+    else setPassportDocument(doc);
+
+    // 4. Sauvegarde silencieuse dans la BDD (met à jour les chemins)
+    try {
+      await saveDocuments(customerId, {
+        usePassport,
+        idCardFrontPath: type === 'cinRecto' ? serverPath : (cinRectoDocument?.serverPath ?? null),
+        idCardBackPath:  type === 'cinVerso' ? serverPath : (cinVersoDocument?.serverPath ?? null),
+        passportPath:    type === 'passport' ? serverPath : (passportDocument?.serverPath ?? null),
+      });
+      console.log(`[AutoSave] ✅ ${type} sauvegardé en BDD`);
+    } catch (err) {
+      console.warn(`[AutoSave] ⚠️ ${type}`, err);
+    }
+
+    // 5. Lancer OCR (sauf pour verso)
+    if (type !== 'cinVerso') {
+      await triggerOcr(type, uri, fileName);
+    }
+  }, [customerId, usePassport, cinRectoDocument, cinVersoDocument, passportDocument]);
 
   // ── canContinue ───────────────────────────────────────────
   const canContinue = (): boolean => {
     if (usePassport) {
-      if (!passportDocument) return false;
+      if (!passportDocument || !passportDocument.serverPath) return false;
       const r = ocrResults.passport;
       if (!r) return false;
       return r.matchStatus === 'MATCH' || (r.matchStatus === 'PARTIAL' && r.canProceed === true);
     }
-    if (!cinRectoDocument || !cinVersoDocument) return false;
+    if (!cinRectoDocument?.serverPath || !cinVersoDocument?.serverPath) return false;
     const r = ocrResults.cinRecto;
     if (!r) return false;
     return r.matchStatus === 'MATCH' || (r.matchStatus === 'PARTIAL' && r.canProceed === true);
   };
 
-  // ── OCR avec gestion des tentatives ──────────────────────
+  // ── OCR ───────────────────────────────────────────────────
   const triggerOcr = async (type: UploadType, uri: string, name: string) => {
     if (type === 'cinVerso') return;
 
@@ -384,24 +412,6 @@ const DocumentsJustificatifsScreen: React.FC<Props> = ({ navigation, route }) =>
     }
   };
 
-  // ── Traitement photo (compression + set + OCR) ────────────
-  const processAndSet = useCallback(async (type: UploadType, rawUri: string) => {
-    const compressed = await compressImage(rawUri);
-    const uri        = compressed?.uri ?? rawUri;
-    const fileSize   = compressed?.fileSize ?? 0;
-    const fileName   = `atb_${type}_${Date.now()}.jpg`;
-
-    const doc: UploadedDocument = { name: fileName, size: fileSize, type: 'image/jpeg', uri };
-    setDocument(type, doc);
-
-    if (type !== 'cinVerso') {
-      setPendingSave({ type, doc });
-      await triggerOcr(type, uri, fileName);
-    } else {
-      await autoSaveDocument(type, doc);
-    }
-  }, [cinRectoDocument, cinVersoDocument, passportDocument, usePassport, attempts]);
-
   // ── Caméra ────────────────────────────────────────────────
   const openCamera = async (type: UploadType) => {
     const key: OcrDocKey = type === 'passport' ? 'passport' : 'cinRecto';
@@ -423,7 +433,7 @@ const DocumentsJustificatifsScreen: React.FC<Props> = ({ navigation, route }) =>
         exif:          false,
       });
       if (result.canceled || !result.assets?.length) return;
-      await processAndSet(type, result.assets[0].uri);
+      await processAndUpload(type, result.assets[0].uri);
     } catch (err: any) {
       console.error('[Camera]', err);
       Alert.alert('Erreur', 'Impossible de prendre la photo. Réessayez.');
@@ -452,11 +462,25 @@ const DocumentsJustificatifsScreen: React.FC<Props> = ({ navigation, route }) =>
         exif:           false,
       });
       if (result.canceled || !result.assets?.length) return;
-      await processAndSet(type, result.assets[0].uri);
+      await processAndUpload(type, result.assets[0].uri);
     } catch (err: any) {
       console.error('[Gallery]', err);
       Alert.alert('Erreur', "Impossible d'accéder à la galerie. Réessayez.");
     }
+  };
+
+  // ── Suppression document ──────────────────────────────────
+  const removeDocument = (type: UploadType) => {
+    if (type === 'cinRecto') {
+      setCinRectoDocument(null);
+      setOcrResults(p => ({ ...p, cinRecto: null }));
+    } else if (type === 'cinVerso') {
+      setCinVersoDocument(null);
+    } else {
+      setPassportDocument(null);
+      setOcrResults(p => ({ ...p, passport: null }));
+    }
+    resetOcr();
   };
 
   // ── Soumission finale ─────────────────────────────────────
@@ -469,13 +493,13 @@ const DocumentsJustificatifsScreen: React.FC<Props> = ({ navigation, route }) =>
     }
     setIsLoading(true);
     try {
+      // Sauvegarde finale avec les chemins serveur
       await saveDocuments(customerId, {
         usePassport,
-        idCardFrontPath: (cinRectoDocument?.uri ?? null) as string | null,
-        idCardBackPath:  (cinVersoDocument?.uri  ?? null) as string | null,
-        passportPath:    (passportDocument?.uri  ?? null) as string | null,
+        idCardFrontPath: cinRectoDocument?.serverPath ?? null,
+        idCardBackPath:  cinVersoDocument?.serverPath ?? null,
+        passportPath:    passportDocument?.serverPath ?? null,
       });
-      // @ts-ignore
       navigation.navigate('Personaldataform', { customerId });
     } catch (e: any) {
       Alert.alert('Erreur', e.message || 'Erreur lors de la sauvegarde.');
@@ -560,11 +584,7 @@ const DocumentsJustificatifsScreen: React.FC<Props> = ({ navigation, route }) =>
                         disabled={isBlocked('cinRecto')}
                         onCamera={openCamera}
                         onGallery={openGallery}
-                        onRemove={() => {
-                          setCinRectoDocument(null);
-                          setOcrResults(p => ({ ...p, cinRecto: null }));
-                          resetOcr();
-                        }}
+                        onRemove={removeDocument}
                       />
                       <OcrResultBadge
                         isScanning={ocrState.isScanning && ocrState.currentScanType === 'CIN_RECTO'}
@@ -586,7 +606,7 @@ const DocumentsJustificatifsScreen: React.FC<Props> = ({ navigation, route }) =>
                         borderColor={colors.atb.red}
                         onCamera={openCamera}
                         onGallery={openGallery}
-                        onRemove={() => setCinVersoDocument(null)}
+                        onRemove={removeDocument}
                       />
                       <ProgressBar
                         count={(cinRectoDocument ? 1 : 0) + (cinVersoDocument ? 1 : 0)}
@@ -604,11 +624,7 @@ const DocumentsJustificatifsScreen: React.FC<Props> = ({ navigation, route }) =>
                         disabled={isBlocked('passport')}
                         onCamera={openCamera}
                         onGallery={openGallery}
-                        onRemove={() => {
-                          setPassportDocument(null);
-                          setOcrResults(p => ({ ...p, passport: null }));
-                          resetOcr();
-                        }}
+                        onRemove={removeDocument}
                       />
                       <OcrResultBadge
                         isScanning={ocrState.isScanning && ocrState.currentScanType === 'PASSPORT'}
@@ -641,16 +657,12 @@ const DocumentsJustificatifsScreen: React.FC<Props> = ({ navigation, route }) =>
                 </View>
               </View>
 
-              {/* ✅ Boutons navigation - Retour forcé vers FATCA (SANS params E-Houwiya) */}
+              {/* Boutons navigation */}
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
                   style={styles.backButton}
                   onPress={() => {
-                    // ✅ [FIX] Retour toujours vers FATCAScreen
-                    // ✅ On ne passe PAS isEHouwiya et eHouwiyaData (FATCA n'a pas de lien avec E-Houwiya)
-                    // @ts-ignore
                     navigation.navigate('FATCA', { customerId, fromRecap: false });
-
                   }}
                 >
                   <Feather name="arrow-left" size={18} color={colors.neutral.gray700} />
@@ -660,17 +672,17 @@ const DocumentsJustificatifsScreen: React.FC<Props> = ({ navigation, route }) =>
                 <TouchableOpacity
                   style={[styles.continueButton, !canContinue() && styles.continueButtonDisabled]}
                   onPress={handleContinue}
-                  disabled={!canContinue() || isLoading}
+                  disabled={!canContinue() || isLoading || uploadingDoc !== null}
                   activeOpacity={0.8}
                 >
                   <LinearGradient
-                    colors={canContinue()
+                    colors={canContinue() && uploadingDoc === null
                       ? [colors.atb.red, '#C41E3A']
                       : [colors.neutral.gray300, colors.neutral.gray400]
                     }
                     style={styles.continueGradient}
                   >
-                    {isLoading
+                    {isLoading || uploadingDoc
                       ? <ActivityIndicator color="#fff" size="small" />
                       : <>
                           <Text style={styles.continueButtonText}>Vérifier et continuer</Text>
@@ -690,7 +702,7 @@ const DocumentsJustificatifsScreen: React.FC<Props> = ({ navigation, route }) =>
   );
 };
 
-// ── Styles (inchangés) ────────────────────────────────────────────────────
+// Styles (inchangés, identiques à ceux du code original)
 const styles = StyleSheet.create({
   safeArea:      { flex: 1, backgroundColor: colors.neutral.white },
   flex:          { flex: 1 },

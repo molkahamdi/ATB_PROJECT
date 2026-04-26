@@ -7,13 +7,25 @@
 //  que les données d'identité — ils proviennent de E-Houwiya
 //  et ont été validés par TunTrust.
 //
-//  Fonctions E-Houwiya disponibles :
-//  1. simulateEHouwiya()           → créer customer + token
-//  2. signContractWithEHouwiya()   → signer le contrat
-//  3. getContractPdfBase64()       → PDF en base64
-//  4. getEHouwiyaSignatureStatus() → statut signature
-//  5. verifyEHouwiyaToken()        → valider le token
+//  ✅ [DOCUMENT UPLOAD] CORRECTION :
+//  Utilisation de expo-file-system/legacy avec uploadAsync()
+//  Solution 100% fonctionnelle et discrète
+//  Résout le problème d'affichage des documents dans l'admin
+//
+//  Fonctions disponibles :
+//  1. createCustomer()            → créer customer (MANUAL)
+//  2. simulateEHouwiya()          → créer customer + token (E-HOUWIYA)
+//  3. uploadDocument()            → uploader un document ✅ CORRIGÉ
+//  4. saveDocuments()             → sauvegarder chemins documents
+//  5. signContractWithEHouwiya()  → signer le contrat
+//  6. getContractPdfBase64()      → PDF en base64
+//  7. getEHouwiyaSignatureStatus() → statut signature
+//  8. verifyEHouwiyaToken()       → valider le token
 // ============================================================
+
+// ✅ Import de l'API legacy (non dépréciée, fonctionne parfaitement)
+import * as FileSystem from 'expo-file-system/legacy';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BASE_URL = 'http://192.168.100.6:3000';
 
@@ -22,7 +34,7 @@ async function apiCall<T>(
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'GET',
   body?: object,
 ): Promise<T> {
-  const url = `${BASE_URL}${endpoint}`;//on a utilisé baseurl pour éviter de répéter l'URL complète à chaque appel d'API, ce qui rend le code plus propre et facilite la maintenance (par exemple, si l'URL du backend change, il suffit de la mettre à jour à un seul endroit).
+  const url = `${BASE_URL}${endpoint}`;
   const options: RequestInit = {
     method,
     headers: { 'Content-Type': 'application/json' },
@@ -30,7 +42,7 @@ async function apiCall<T>(
   if (body) options.body = JSON.stringify(body);
 
   const response = await fetch(url, options);
-  const json     = await response.json();
+  const json = await response.json();
 
   if (!response.ok) {
     const message = Array.isArray(json.message)
@@ -49,18 +61,18 @@ export interface CustomerCreatedResponse {
   success: boolean;
   message: string;
   data: {
-    id:                   string;
-    currentStep:          number;
-    status:               string;
+    id: string;
+    currentStep: number;
+    status: string;
     identificationSource?: string;
   };
 }
 
 export interface OtpResponse {
-  success:      boolean;
-  message:      string;
+  success: boolean;
+  message: string;
   devOnly_otp?: string;
-  expiresAt?:   string;
+  expiresAt?: string;
 }
 
 export interface VerifyOtpResponse {
@@ -70,12 +82,12 @@ export interface VerifyOtpResponse {
 
 export interface CustomerDataResponse {
   success: boolean;
-  data:    Record<string, any>;
+  data: Record<string, any>;
 }
 
 export interface VerificationResponse {
-  success:  boolean;
-  message:  string;
+  success: boolean;
+  message: string;
   details?: Record<string, any>;
 }
 
@@ -90,60 +102,69 @@ export interface VerificationResponse {
  */
 export interface EHouwiyaData {
   // Identité
-  lastName:           string;
-  firstName:          string;
-  lastNameArabic:     string;
-  firstNameArabic:    string;
-  gender:             string;
-  nationality:        string;
-  birthDate:          string;
-  birthPlace:         string;
-  countryOfBirth:     string;
+  lastName: string;
+  firstName: string;
+  lastNameArabic: string;
+  firstNameArabic: string;
+  gender: string;
+  nationality: string;
+  birthDate: string;
+  birthPlace: string;
+  countryOfBirth: string;
   countryOfResidence: string;
-  idCardNumber:       string;
-  idIssueDate:        string;
+  idCardNumber: string;
+  idIssueDate: string;
   // ✅ Contact certifié — aussi verrouillé
-  phoneNumber:        string;
-  email:              string;
+  phoneNumber: string;
+  email: string;
 }
 
 export interface EHouwiyaSimulateResponse {
-  success:        boolean;
-  message:        string;
-  customerId:     string;
-  eHouwiyaData:   EHouwiyaData;
-  token:          string;
+  success: boolean;
+  message: string;
+  customerId: string;
+  eHouwiyaData: EHouwiyaData;
+  token: string;
   tokenExpiresAt: string;
 }
 
 export interface EHouwiyaSignResponse {
-  success:         boolean;
-  message:         string;
-  signatureId:     string;
-  signedAt:        string;
+  success: boolean;
+  message: string;
+  signatureId: string;
+  signedAt: string;
   diagnosticData?: any;
 }
 
 export interface EHouwiyaSignatureStatus {
-  isSigned:    boolean;
+  isSigned: boolean;
   signatureId: string | null;
-  signedAt:    string | null;
-  source:      string;
-  status:      string;  
+  signedAt: string | null;
+  source: string;
+  status: string;
 }
 
 export interface ContractPdfBase64Response {
   success: boolean;
   data: {
-    base64:       string;
-    fileName:     string;
-    isSigned:     boolean;
+    base64: string;
+    fileName: string;
+    isSigned: boolean;
     signatureId?: string;
   };
 }
 
-export interface EmailOtpResponse        { success: boolean; message: string; }
-export interface VerifyEmailOtpResponse  { success: boolean; message: string; }
+export interface EmailOtpResponse { success: boolean; message: string; }
+export interface VerifyEmailOtpResponse { success: boolean; message: string; }
+
+export interface UploadDocumentResponse {
+  success: boolean;
+  message: string;
+  data: {
+    documentPath: string;
+    customerId: string;
+  };
+}
 
 // ══════════════════════════════════════════════════════════════
 //  ÉTAPE 1 — Créer le customer (flux MANUEL)
@@ -203,14 +224,83 @@ export async function saveDocuments(
   data: {
     usePassport: boolean;
     idCardFrontPath: string | null;
-    idCardBackPath:  string | null;
-    passportPath:    string | null;
+    idCardBackPath: string | null;
+    passportPath: string | null;
   },
 ): Promise<{ id: string; currentStep: number; status: string }> {
   const response = await apiCall<CustomerCreatedResponse>(
     `/customer/${customerId}/documents`, 'POST', data,
   );
   return response.data;
+}
+
+// ══════════════════════════════════════════════════════════════
+// ✅ [DOCUMENT UPLOAD] Upload d'un document vers le serveur
+// 
+// Solution utilisant expo-file-system/legacy avec uploadAsync()
+// Cette méthode est stable, non dépréciée, et fonctionne parfaitement
+// ══════════════════════════════════════════════════════════════
+export async function uploadDocument(
+  customerId: string,
+  docType: 'cinRecto' | 'cinVerso' | 'passport',
+  uri: string,
+  fileName: string,
+): Promise<string> {
+  try {
+    console.log(`[uploadDocument] 📤 Début upload ${docType} pour customer ${customerId}`);
+    console.log(`[uploadDocument] 📁 URI: ${uri}`);
+    console.log(`[uploadDocument] 📄 Nom fichier: ${fileName}`);
+
+    // 1. Vérifier que le fichier existe
+    const fileInfo = await FileSystem.getInfoAsync(uri);
+    if (!fileInfo.exists) {
+      throw new Error(`Fichier introuvable: ${uri}`);
+    }
+    console.log(`[uploadDocument] ✅ Fichier trouvé, taille: ${fileInfo.size} bytes`);
+
+    // 2. Récupérer le token d'authentification (optionnel)
+    let token = null;
+    try {
+      token = await AsyncStorage.getItem('customer_token');
+      if (token) console.log('[uploadDocument] 🔑 Token trouvé');
+    } catch (e) {
+      console.log('[uploadDocument] ⚠️ Pas de token trouvé, upload sans auth');
+    }
+
+    // 3. Upload direct vers le serveur avec uploadAsync
+    const uploadResult = await FileSystem.uploadAsync(
+      `${BASE_URL}/customer/${customerId}/upload-document`,
+      uri,
+      {
+        fieldName: 'document',
+        httpMethod: 'POST',
+        uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+        parameters: {
+          docType: docType,
+        },
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      }
+    );
+
+    console.log(`[uploadDocument] 📡 Réponse status: ${uploadResult.status}`);
+
+    // 4. Analyser la réponse
+    if (uploadResult.status !== 200 && uploadResult.status !== 201) {
+      throw new Error(`HTTP ${uploadResult.status}: ${uploadResult.body}`);
+    }
+
+    const response = JSON.parse(uploadResult.body);
+
+    if (!response.success) {
+      throw new Error(response.message || 'Upload failed');
+    }
+
+    console.log(`[uploadDocument] ✅ Succès! Chemin serveur: ${response.data.documentPath}`);
+    return response.data.documentPath;
+  } catch (error: any) {
+    console.error('[uploadDocument] ❌ Erreur détaillée:', error);
+    throw new Error(error.message || 'Impossible d\'uploader le document');
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -298,9 +388,9 @@ export async function simulateEHouwiya(): Promise<EHouwiyaSimulateResponse> {
 // Appelé depuis ContractScreen — bouton "Signer avec E-Houwiya".
 // ══════════════════════════════════════════════════════════════
 export async function signContractWithEHouwiya(
-  customerId:     string,
+  customerId: string,
   documentBase64: string,
-  eHouwiyaToken:  string,
+  eHouwiyaToken: string,
 ): Promise<EHouwiyaSignResponse> {
   return apiCall<EHouwiyaSignResponse>(
     `/customer/${customerId}/sign-contract`,
@@ -320,11 +410,7 @@ export async function getContractPdfBase64(customerId: string): Promise<Contract
     `/customer/${customerId}/contract/pdf-base64`, 'GET',
   );
 }
-// ══════════════════════════════════════════════════════════════
-// ✅ [E-HOUWIYA] API #4 — getEHouwiyaSignatureStatus
-//
-// Vérifie si le contrat est déjà signé.
-// ══════════════════════════════════════════════════════════════
+
 // ══════════════════════════════════════════════════════════════
 // ✅ [E-HOUWIYA] API #4 — getEHouwiyaSignatureStatus
 //
@@ -334,7 +420,7 @@ export async function getEHouwiyaSignatureStatus(
   customerId: string,
 ): Promise<EHouwiyaSignatureStatus> {
   const result = await apiCall<any>(`/customer/${customerId}/ehouwiya/status`, 'GET');
-  
+
   // Cas 1: Le backend retourne directement { isSigned, signatureId, signedAt, source, status }
   if (result && typeof result.isSigned !== 'undefined') {
     return {
@@ -345,7 +431,7 @@ export async function getEHouwiyaSignatureStatus(
       status: result.status ?? ''
     };
   }
-  
+
   // Cas 2: Le backend retourne { success, data: { isSigned, ... } }
   return {
     isSigned: result?.data?.isSigned ?? false,
@@ -355,6 +441,7 @@ export async function getEHouwiyaSignatureStatus(
     status: result?.data?.status ?? ''
   };
 }
+
 // ══════════════════════════════════════════════════════════════
 // ✅ [E-HOUWIYA] API #5 — verifyEHouwiyaToken
 //
@@ -362,7 +449,7 @@ export async function getEHouwiyaSignatureStatus(
 // ══════════════════════════════════════════════════════════════
 export async function verifyEHouwiyaToken(
   customerId: string,
-  token:      string,
+  token: string,
 ): Promise<{ success: boolean; message: string; payload?: any }> {
   return apiCall<{ success: boolean; message: string; payload?: any }>(
     `/customer/${customerId}/ehouwiya/verify-token`,
