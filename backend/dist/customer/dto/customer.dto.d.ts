@@ -1,4 +1,5 @@
 import { IdentificationSource } from '../entities/customer.entity';
+import { CustomerStatus } from '../entities/customer.entity';
 export declare class CreateCustomerDto {
     identificationSource?: IdentificationSource;
     lastName: string;
@@ -55,4 +56,8 @@ export declare class SavePersonalFormDto {
 export declare class SignContractDto {
     documentBase64: string;
     eHouwiyaToken: string;
+}
+export declare class AdminDecisionDto {
+    decision: CustomerStatus.APPROVED | CustomerStatus.REJECTED;
+    rejectionReason?: string;
 }

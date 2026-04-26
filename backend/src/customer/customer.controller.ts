@@ -1,15 +1,8 @@
 // ============================================================
 //  backend/src/customer/customer.controller.ts
-//
-//  ✅ [E-HOUWIYA] CORRECTION :
-//  L'endpoint PATCH /:id/ehouwiya-contact est SUPPRIMÉ.
-//
-//  Raison : email et phoneNumber sont aussi verrouillés
-//  pour les customers E-Houwiya (validés par TunTrust).
-//  Aucun champ de contact ne peut être modifié.
-//
-//  Le PATCH /:id standard protège automatiquement tous
-//  les champs via EHOUWIYA_LOCKED_FIELDS dans le service.
+//  ✅ AJOUT : POST /customer/:id/upload-document
+//     Reçoit un fichier image, le sauvegarde sur disque,
+//     retourne le chemin serveur relatif.
 // ============================================================
 import {
   Controller,
@@ -22,8 +15,11 @@ import {
   Patch,
   UploadedFile,
   UseInterceptors,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { CustomerService } from './customer.service';
 import {
   CreateCustomerDto,
@@ -32,10 +28,69 @@ import {
   SaveDocumentsDto,
   SavePersonalFormDto,
 } from './dto/customer.dto';
+import * as fs from 'fs';
+
+// ✅ Configuration du stockage pour les documents uploadés
+const UPLOAD_DIR = './uploads/documents';
+
+// Créer le dossier s'il n'existe pas
+if (!fs.existsSync(UPLOAD_DIR)) {
+  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+}
+
+const storage = diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, UPLOAD_DIR);
+  },
+  filename: (req, file, cb) => {
+    const customerId = req.params.id;
+    const timestamp = Date.now();
+    const random = Math.round(Math.random() * 1e9);
+    const ext = extname(file.originalname) || '.jpg';
+    cb(null, `${customerId}_${timestamp}_${random}${ext}`);
+  },
+});
 
 @Controller('customer')
 export class CustomerController {
   constructor(private readonly service: CustomerService) {}
+
+  // ── ✅ NOUVEAU : Upload de document (remplace l'enregistrement d'URI) ──
+  @Post(':id/upload-document')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(FileInterceptor('document', { storage }))
+  async uploadDocument(
+    @Param('id') customerId: string,
+    @UploadedFile() file: Express.Multer.File,
+    @Body('docType') docType: 'cinRecto' | 'cinVerso' | 'passport',
+  ) {
+    if (!file) {
+      throw new BadRequestException('Aucun fichier reçu');
+    }
+    if (!['cinRecto', 'cinVerso', 'passport'].includes(docType)) {
+      throw new BadRequestException('Type de document invalide');
+    }
+
+    // Chemin relatif stocké en BDD (accessible depuis le backend)
+    const relativePath = file.path.replace(/\\/g, '/');
+
+    // Mettre à jour le chemin du document dans la BDD
+    const updateData: any = {};
+    if (docType === 'cinRecto') updateData.idCardFrontPath = relativePath;
+    if (docType === 'cinVerso') updateData.idCardBackPath = relativePath;
+    if (docType === 'passport') updateData.passportPath = relativePath;
+
+    const customer = await this.service.updateDocumentPath(customerId, updateData);
+
+    return {
+      success: true,
+      message: 'Document uploadé avec succès',
+      data: {
+        documentPath: relativePath,
+        customerId: customer.id,
+      },
+    };
+  }
 
   // ── Créer un customer ─────────────────────────────────────
   @Post()
@@ -111,6 +166,7 @@ export class CustomerController {
   }
 
   // ── Documents ─────────────────────────────────────────────
+  // ⚠️ Cet endpoint est conservé pour compatibilité, mais privilégier upload-document
   @Post(':id/documents')
   @HttpCode(HttpStatus.OK)
   async saveDocuments(@Param('id') id: string, @Body() dto: SaveDocumentsDto) {
@@ -140,9 +196,6 @@ export class CustomerController {
   }
 
   // ── Mise à jour partielle ─────────────────────────────────
-  // ✅ [E-HOUWIYA] : Si source = E_HOUWIYA, les champs
-  // identité + email + téléphone sont automatiquement
-  // préservés dans customer.service.ts via EHOUWIYA_LOCKED_FIELDS
   @Patch(':id')
   async update(@Param('id') id: string, @Body() dto: Partial<CreateCustomerDto>) {
     const customer = await this.service.update(id, dto);

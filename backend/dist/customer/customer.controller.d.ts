@@ -3,6 +3,14 @@ import { CreateCustomerDto, VerifyOtpDto, SaveFatcaDto, SaveDocumentsDto, SavePe
 export declare class CustomerController {
     private readonly service;
     constructor(service: CustomerService);
+    uploadDocument(customerId: string, file: Express.Multer.File, docType: 'cinRecto' | 'cinVerso' | 'passport'): Promise<{
+        success: boolean;
+        message: string;
+        data: {
+            documentPath: string;
+            customerId: string;
+        };
+    }>;
     create(dto: CreateCustomerDto): Promise<{
         success: boolean;
         message: string;

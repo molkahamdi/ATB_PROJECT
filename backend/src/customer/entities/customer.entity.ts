@@ -291,4 +291,10 @@ export class Customer {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
+
+
+
+
+  @Column({ name: 'rejection_reason', nullable: true })
+rejectionReason!: string;
 }

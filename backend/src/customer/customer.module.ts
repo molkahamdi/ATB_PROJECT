@@ -10,9 +10,11 @@ import { OnboardingVerificationController } from './onboarding-verification.cont
 import { OnboardingVerificationService } from './onboarding-verification.service';
 import { EHouwiyaController } from './ehouwiya/ehouwiya.controller';
 import { EHouwiyaService } from './ehouwiya/ehouwiya.service';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Customer])],
+  imports: [TypeOrmModule.forFeature([Customer]),
+NotificationsModule,],
   controllers: [CustomerController,ContractController,OnboardingVerificationController,EHouwiyaController],
   providers: [CustomerService,ContractService,OnboardingVerificationService,EHouwiyaService],
   exports: [CustomerService,EHouwiyaService],

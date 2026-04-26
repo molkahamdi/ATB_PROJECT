@@ -3,7 +3,7 @@ import {
   Length, Matches, IsBoolean, IsNumber,
 } from 'class-validator';
 import { IdentificationSource } from '../entities/customer.entity';
-
+import { CustomerStatus } from '../entities/customer.entity';
 // ──────────────────────────────────────────────────────────────
 //  DTO ÉTAPE 1 : Données personnelles
 // ──────────────────────────────────────────────────────────────
@@ -149,4 +149,14 @@ export class SignContractDto {
    */
   @IsString() @IsNotEmpty()
   eHouwiyaToken!: string;
+
+}
+export class AdminDecisionDto {
+  @IsEnum([CustomerStatus.APPROVED, CustomerStatus.REJECTED])
+  @IsNotEmpty()
+  decision!: CustomerStatus.APPROVED | CustomerStatus.REJECTED;
+
+  @IsString()
+  @IsOptional()
+  rejectionReason?: string;
 }

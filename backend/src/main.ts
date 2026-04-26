@@ -21,8 +21,10 @@ async function bootstrap() {
 
   // ── CORS : autorise les appels depuis le frontend mobile ──
   app.enableCors({
-    origin:  '*', // En production → remplace par ton URL exacte
+     origin:         ['http://localhost:5173', 'http://localhost:3001'], // En production → remplace par ton URL exacte
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],// Autorise le header d'authentification pour les tokens JWT
+    credentials:    true,// Permet d'envoyer les cookies (pour le dashboard admin)
   });
 
   const port = process.env.PORT || 3000;

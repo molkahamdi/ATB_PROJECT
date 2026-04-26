@@ -16,6 +16,10 @@ const customer_entity_1 = require("./customer/entities/customer.entity");
 const customer_module_1 = require("./customer/customer.module");
 const ocr_module_1 = require("./ocr/ocr.module");
 const email_otp_module_1 = require("./email-otp/email-otp.module");
+const admin_user_entity_1 = require("./admin/entities/admin-user.entity");
+const admin_module_1 = require("./admin/admin.module");
+const notifications_module_1 = require("./notifications/notifications.module");
+const audit_log_entity_1 = require("./admin/entities/audit-log.entity");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -33,14 +37,16 @@ exports.AppModule = AppModule = __decorate([
                     username: cfg.get('POSTGRES_USER'),
                     password: String(cfg.get('POSTGRES_PASSWORD') || ''),
                     database: cfg.get('POSTGRES_DB'),
-                    entities: [customer_entity_1.Customer],
+                    entities: [customer_entity_1.Customer, admin_user_entity_1.AdminUser, audit_log_entity_1.AuditLog],
                     synchronize: true,
                     logging: ['error'],
                 }),
             }),
             customer_module_1.CustomerModule,
             ocr_module_1.OcrModule,
-            email_otp_module_1.EmailOtpModule
+            email_otp_module_1.EmailOtpModule,
+            admin_module_1.AdminModule,
+            notifications_module_1.NotificationsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

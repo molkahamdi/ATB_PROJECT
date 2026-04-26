@@ -9,9 +9,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SignContractDto = exports.SavePersonalFormDto = exports.SaveDocumentsDto = exports.SaveFatcaDto = exports.VerifyOtpDto = exports.CreateCustomerDto = void 0;
+exports.AdminDecisionDto = exports.SignContractDto = exports.SavePersonalFormDto = exports.SaveDocumentsDto = exports.SaveFatcaDto = exports.VerifyOtpDto = exports.CreateCustomerDto = void 0;
 const class_validator_1 = require("class-validator");
 const customer_entity_1 = require("../entities/customer.entity");
+const customer_entity_2 = require("../entities/customer.entity");
 class CreateCustomerDto {
     identificationSource;
     lastName;
@@ -297,4 +298,19 @@ __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], SignContractDto.prototype, "eHouwiyaToken", void 0);
+class AdminDecisionDto {
+    decision;
+    rejectionReason;
+}
+exports.AdminDecisionDto = AdminDecisionDto;
+__decorate([
+    (0, class_validator_1.IsEnum)([customer_entity_2.CustomerStatus.APPROVED, customer_entity_2.CustomerStatus.REJECTED]),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], AdminDecisionDto.prototype, "decision", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], AdminDecisionDto.prototype, "rejectionReason", void 0);
 //# sourceMappingURL=customer.dto.js.map

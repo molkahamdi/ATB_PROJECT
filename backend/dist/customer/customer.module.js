@@ -18,12 +18,14 @@ const onboarding_verification_controller_1 = require("./onboarding-verification.
 const onboarding_verification_service_1 = require("./onboarding-verification.service");
 const ehouwiya_controller_1 = require("./ehouwiya/ehouwiya.controller");
 const ehouwiya_service_1 = require("./ehouwiya/ehouwiya.service");
+const notifications_module_1 = require("../notifications/notifications.module");
 let CustomerModule = class CustomerModule {
 };
 exports.CustomerModule = CustomerModule;
 exports.CustomerModule = CustomerModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([customer_entity_1.Customer])],
+        imports: [typeorm_1.TypeOrmModule.forFeature([customer_entity_1.Customer]),
+            notifications_module_1.NotificationsModule,],
         controllers: [customer_controller_1.CustomerController, contract_controller_1.ContractController, onboarding_verification_controller_1.OnboardingVerificationController, ehouwiya_controller_1.EHouwiyaController],
         providers: [customer_service_1.CustomerService, contract_service_1.ContractService, onboarding_verification_service_1.OnboardingVerificationService, ehouwiya_service_1.EHouwiyaService],
         exports: [customer_service_1.CustomerService, ehouwiya_service_1.EHouwiyaService],

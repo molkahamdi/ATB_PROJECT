@@ -6,18 +6,8 @@
 //  email et phoneNumber sont maintenant AUSSI verrouillés
 //  pour les customers E-Houwiya.
 //
-//  Raison : lorsqu'un client ouvre un compte E-Houwiya,
-//  il saisit son vrai email et vrai numéro de téléphone
-//  qui sont VALIDÉS par TunTrust lors de la vérification.
-//  Ces données font partie de son identité numérique certifiée
-//  et ne peuvent donc PAS être modifiées, au même titre
-//  que le nom, la CIN, la date de naissance, etc.
-//
-//  → La méthode updateEHouwiyaContact() est SUPPRIMÉE
-//  → update() bloque TOUS les champs identité + contact
-//  → Le frontend ne doit afficher AUCUN champ éditable
-//    sauf les données non fournies par E-Houwiya
-//    (adresse, situation pro, agence ATB)
+//  ✅ [NOTIFICATIONS] AJOUT :
+//  Émission d'une notification quand un dossier est soumis
 // ============================================================
 
 import {
@@ -41,21 +31,15 @@ import {
   SaveDocumentsDto,
   SavePersonalFormDto,
 } from './dto/customer.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 
 const FormData = require('form-data');
 const axios    = require('axios');
 
 // ══════════════════════════════════════════════════════════════
 // ✅ [E-HOUWIYA] Liste complète des champs verrouillés
-//
-// Tous ces champs proviennent de E-Houwiya et sont validés
-// par TunTrust. Ils ne peuvent JAMAIS être modifiés.
-//
-// En production : la banque peut ajuster cette liste
-// selon ce que retourne réellement l'API E-Houwiya.
 // ══════════════════════════════════════════════════════════════
 export const EHOUWIYA_LOCKED_FIELDS = [
-  // Identité civile
   'lastName',
   'firstName',
   'lastNameArabic',
@@ -66,13 +50,8 @@ export const EHOUWIYA_LOCKED_FIELDS = [
   'birthPlace',
   'countryOfBirth',
   'countryOfResidence',
-  // Pièce d'identité
   'idCardNumber',
   'idIssueDate',
-  // ✅ [CORRECTION] Contact validé par TunTrust — aussi verrouillé
-  // Le client a saisi et validé son email et téléphone
-  // lors de l'ouverture de son compte E-Houwiya.
-  // Ces données sont certifiées et ne peuvent pas être changées.
   'email',
   'phoneNumber',
 ] as const;
@@ -88,6 +67,7 @@ export class CustomerService {
   constructor(
     @InjectRepository(Customer)
     private readonly repo: Repository<Customer>,
+    private readonly notificationsService: NotificationsService, // ✅ Injection notifications
   ) {}
 
   private async findOrFail(id: string): Promise<Customer> {
@@ -233,7 +213,7 @@ export class CustomerService {
   }
 
   // ══════════════════════════════════════════════════════════
-  //  FORMULAIRE PERSONNEL
+  //  FORMULAIRE PERSONNEL - avec notification
   // ══════════════════════════════════════════════════════════
   async savePersonalForm(id: string, dto: SavePersonalFormDto): Promise<Customer> {
     const customer = await this.findOrFail(id);
@@ -243,6 +223,14 @@ export class CustomerService {
     customer.currentStep = 5;
     const saved = await this.repo.save(customer);
     this.logger.log(`[PERSONAL-FORM] 🎉 Dossier soumis pour : ${id}`);
+    
+    // ✅ Émettre une notification pour l'admin
+    this.notificationsService.emitNewDossierNotification(
+      customer.id,
+      `${customer.firstName} ${customer.lastName}`,
+      customer.idCardNumber,
+    );
+    
     return saved;
   }
 
@@ -259,21 +247,6 @@ export class CustomerService {
 
   // ══════════════════════════════════════════════════════════
   //  MISE À JOUR
-  //
-  //  ✅ [E-HOUWIYA] CORRECTION FINALE :
-  //  Tous les champs EHOUWIYA_LOCKED_FIELDS sont protégés,
-  //  incluant désormais email et phoneNumber.
-  //
-  //  Ces champs ont été validés par TunTrust lors de
-  //  l'ouverture du compte E-Houwiya et sont donc
-  //  considérés comme des données certifiées immuables.
-  //
-  //  Seuls les champs suivants restent modifiables
-  //  via PATCH /customer/:id en mode E-Houwiya :
-  //  → adresse, gouvernorat, delegation, codePostal
-  //  → situationProfessionnelle, profession, entreprise, etc.
-  //  → gouvernoratAgence, agence
-  //  → réponses FATCA (questions réglementaires)
   // ══════════════════════════════════════════════════════════
   async update(id: string, dto: Partial<CreateCustomerDto>): Promise<Customer> {
     const customer = await this.findOrFail(id);
@@ -291,5 +264,25 @@ export class CustomerService {
     const updated = await this.repo.save(customer);
     this.logger.log(`[UPDATE] Customer mis à jour : ${id}`);
     return updated;
+  }
+
+  async updateDocumentPath(id: string, paths: Partial<{
+    idCardFrontPath: string;
+    idCardBackPath: string;
+    passportPath: string;
+  }>): Promise<Customer> {
+    const customer = await this.findOrFail(id);
+    
+    if (paths.idCardFrontPath) customer.idCardFrontPath = paths.idCardFrontPath;
+    if (paths.idCardBackPath)  customer.idCardBackPath  = paths.idCardBackPath;
+    if (paths.passportPath)    customer.passportPath    = paths.passportPath;
+    
+    if (paths.idCardFrontPath || paths.idCardBackPath || paths.passportPath) {
+      customer.documentsUploadedAt = new Date();
+    }
+    
+    const saved = await this.repo.save(customer);
+    this.logger.log(`[DOCUMENT] Chemins mis à jour pour ${id}`);
+    return saved;
   }
 }

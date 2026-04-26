@@ -18,6 +18,7 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const customer_entity_1 = require("./entities/customer.entity");
+const notifications_service_1 = require("../notifications/notifications.service");
 const FormData = require('form-data');
 const axios = require('axios');
 exports.EHOUWIYA_LOCKED_FIELDS = [
@@ -38,10 +39,12 @@ exports.EHOUWIYA_LOCKED_FIELDS = [
 ];
 let CustomerService = CustomerService_1 = class CustomerService {
     repo;
+    notificationsService;
     logger = new common_1.Logger(CustomerService_1.name);
     OCR_URL = process.env.OCR_SERVICE_URL || 'http://localhost:8001';
-    constructor(repo) {
+    constructor(repo, notificationsService) {
         this.repo = repo;
+        this.notificationsService = notificationsService;
     }
     async findOrFail(id) {
         const c = await this.repo.findOne({ where: { id } });
@@ -163,6 +166,7 @@ let CustomerService = CustomerService_1 = class CustomerService {
         customer.currentStep = 5;
         const saved = await this.repo.save(customer);
         this.logger.log(`[PERSONAL-FORM] 🎉 Dossier soumis pour : ${id}`);
+        this.notificationsService.emitNewDossierNotification(customer.id, `${customer.firstName} ${customer.lastName}`, customer.idCardNumber);
         return saved;
     }
     async findOne(id) { return this.findOrFail(id); }
@@ -184,11 +188,27 @@ let CustomerService = CustomerService_1 = class CustomerService {
         this.logger.log(`[UPDATE] Customer mis à jour : ${id}`);
         return updated;
     }
+    async updateDocumentPath(id, paths) {
+        const customer = await this.findOrFail(id);
+        if (paths.idCardFrontPath)
+            customer.idCardFrontPath = paths.idCardFrontPath;
+        if (paths.idCardBackPath)
+            customer.idCardBackPath = paths.idCardBackPath;
+        if (paths.passportPath)
+            customer.passportPath = paths.passportPath;
+        if (paths.idCardFrontPath || paths.idCardBackPath || paths.passportPath) {
+            customer.documentsUploadedAt = new Date();
+        }
+        const saved = await this.repo.save(customer);
+        this.logger.log(`[DOCUMENT] Chemins mis à jour pour ${id}`);
+        return saved;
+    }
 };
 exports.CustomerService = CustomerService;
 exports.CustomerService = CustomerService = CustomerService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(customer_entity_1.Customer)),
-    __metadata("design:paramtypes", [typeorm_2.Repository])
+    __metadata("design:paramtypes", [typeorm_2.Repository,
+        notifications_service_1.NotificationsService])
 ], CustomerService);
 //# sourceMappingURL=customer.service.js.map
