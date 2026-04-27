@@ -1,18 +1,3 @@
-// ============================================================
-//  frontend/screens/HomeScreen.tsx
-//
-//  ✅ [E-HOUWIYA] Modification :
-//  Le bouton "Commencer avec E-Houwiya" navigue maintenant
-//  vers 'EHouwiyaScreen' au lieu de 'EHouwiyaWebView'.
-//
-//  EHouwiyaScreen est le nouvel écran qui :
-//  1. Explique le processus E-Houwiya
-//  2. Lance l'appel API simulé
-//  3. Navigue vers OnboardingPersonalData avec isEHouwiya=true
-//
-//  Le reste du fichier est identique à l'original.
-// ============================================================
-
 import React, { useEffect, useState } from 'react';
 import {
   View,

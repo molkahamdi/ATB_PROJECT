@@ -1,13 +1,4 @@
-// ============================================================
-//  frontend/screens/OtpVerificationScreen.tsx
-//  ✅ mode 'sms'   → OTP local affiché en popup Alert
-//  ✅ mode 'email' → vrai email envoyé via Resend (page neuve)
-//  ✅ OTP reset à '' à chaque changement de page
-//  ✅ Email envoyé automatiquement au montage de la page email
-//  ✅ Info box rouge
-//  ✅ Bouton Quitter supprimé
-//  ✅ Boutons Retour et Continuer centrés
-// ============================================================
+
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, Alert,

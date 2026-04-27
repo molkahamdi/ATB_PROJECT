@@ -1,5 +1,4 @@
-// ============================================================
-//  backend/src/customer/customer.controller.ts
+
 //  ✅ AJOUT : POST /customer/:id/upload-document
 //     Reçoit un fichier image, le sauvegarde sur disque,
 //     retourne le chemin serveur relatif.

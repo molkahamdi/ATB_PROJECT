@@ -1,9 +1,6 @@
-// ============================================================
-//  backend/src/customer/ehouwiya/ehouwiya.service.ts
-//
-//  ✅ CORRECTIONS APPORTÉES :
+
 //  ──────────────────────────────────────────────────────────
-//  1. signContract() met maintenant le statut à SUBMITTED
+//  1. signContract() met le statut à SUBMITTED
 //     → Le client E-Houwiya est reconnu comme un vrai client
 //     → VerifPID le bloquera lors d'une 2e tentative
 //

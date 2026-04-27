@@ -1,9 +1,4 @@
-// ============================================================
-//  frontend/screens/FATCAScreen.tsx — VERSION FINALE
-//  ✅ Popup immédiat dès qu'un "Oui" est sélectionné (TOUTES les 8 questions)
-//  ✅ Blocage total de la poursuite du processus
-//  ✅ Navigation retour vers l'écran d'accueil (Home)
-// ============================================================
+
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, KeyboardAvoidingView,

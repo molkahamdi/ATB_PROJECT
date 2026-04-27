@@ -1,5 +1,4 @@
-// ============================================================
-//  backend/src/customer/onboarding-verification.controller.ts
+
 //  Ce controller expose :
 //   - POST /customer/:id/verify-onboarding
 //     → Appelé depuis les DEUX flux (MANUAL et E-HOUWIYA)

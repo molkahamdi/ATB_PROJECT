@@ -1,8 +1,4 @@
-// ============================================================
-//  frontend/screens/PersonalDataForm.tsx
-//  ✅ FCM RISK : toujours réponse statique LR → passe toujours
-//  ✅ loadingStep affiche la progression à l'utilisateur
-// ============================================================
+
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,

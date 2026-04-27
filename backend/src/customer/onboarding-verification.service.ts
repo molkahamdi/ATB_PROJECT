@@ -1,8 +1,4 @@
-// ============================================================
-//  backend/src/customer/onboarding-verification.service.ts
-//
-//  ✅ CORRECTIONS APPORTÉES :
-//  ──────────────────────────────────────────────────────────
+
 //  1. VerifPID cherche une CIN finalisée TOUS FLUX CONFONDUS
 //     → SUBMITTED ou APPROVED, E_HOUWIYA ou MANUAL indifféremment
 //     → Empêche : E-Houwiya signé → retentative MANUAL avec même CIN

@@ -1,8 +1,7 @@
-// src/components/ui.tsx — tous les petits composants réutilisables
+
 
 import React from 'react';
 
-// Palette raffinée cohérente
 const palette = {
   success:      '#278a5c',
   successLight: '#eaf5ef',
@@ -22,7 +21,6 @@ const palette = {
   white:        '#ffffff',
 };
 
-// ── Statut badge (sans bordure, plus épuré) ───────────────────────────
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
   DRAFT:             { label: 'Brouillon',      color: palette.neutral, bg: palette.neutralLight },
   PENDING_OTP:       { label: 'Attente OTP',    color: palette.info,     bg: palette.infoLight },

@@ -1,8 +1,4 @@
-// ============================================================
-//  backend/src/customer/contract/contract.service.ts
-//
-//  ✅ [E-HOUWIYA] Modifications apportées :
-//  ─────────────────────────────────────────
+
 //  1. generateContractPdf() retourne maintenant aussi le
 //     PDF en base64 via generateContractPdfBase64()
 //     pour que le frontend puisse l'envoyer à TunTrust
@@ -19,8 +15,7 @@
 //     Génère le PDF final avec le cachet de signature E-Houwiya
 //     Utilisé après validation TunTrust pour le téléchargement final
 //
-//  Le reste est identique à l'original.
-// ============================================================
+
 
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';

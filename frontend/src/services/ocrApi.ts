@@ -1,4 +1,4 @@
-// frontend/services/ocrApi.ts
+
 // ✅ Le front envoie la photo à NestJS :3000
 // ✅ NestJS transmet à Python :8001 en local (localhost)
 // ✅ PASSPORT : comparaison latin ↔ latin (lastNameLatin / firstNameLatin)

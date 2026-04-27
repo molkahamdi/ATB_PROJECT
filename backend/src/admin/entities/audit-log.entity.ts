@@ -1,4 +1,3 @@
-// backend/src/admin/entities/audit-log.entity.ts
 import {
   Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Index,
 } from 'typeorm';

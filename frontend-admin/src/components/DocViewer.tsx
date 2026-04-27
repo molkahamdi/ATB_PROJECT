@@ -1,8 +1,7 @@
-// src/components/DocViewer.tsx
-// ============================================================
+
 //  Composant pour afficher les documents justificatifs
 //
-//  Problème résolu :
+
 //  ─────────────────
 //  Les images sont servies par un endpoint protégé (JWT).
 //  On ne peut pas faire <img src="..."> directement car

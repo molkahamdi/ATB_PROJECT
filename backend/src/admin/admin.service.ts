@@ -1,9 +1,3 @@
-// ============================================================
-//  backend/src/admin/admin.service.ts
-//  ✅ VIEW_LIST, VIEW_DOCUMENT, VIEW_STATS supprimés
-//  ✅ Motif de rejet bien stocké dans metadata
-//  ✅ VIEW_DOSSIER uniquement sur ouverture fiche
-// ============================================================
 import {
   Injectable, NotFoundException, UnauthorizedException,
   BadRequestException, Logger,
@@ -383,7 +377,6 @@ export class AdminService {
   // ── Lecture audit ─────────────────────────────────────
   getAuditLogs(query: any)  { return this.auditLogService.getLogs(query); }
   getAuditStats()           { return this.auditLogService.getAuditStats(); }
-
   // ── Seed ─────────────────────────────────────────────
   async seedDefaultAdmin(): Promise<void> {
     const exists = await this.adminRepo.findOne({ where: { username: 'MolkaHamdi' } });

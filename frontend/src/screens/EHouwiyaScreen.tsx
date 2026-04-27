@@ -1,8 +1,3 @@
-// ============================================================
-//  frontend/screens/EHouwiyaScreen.tsx
-//
-//  ✅ [E-HOUWIYA] NOUVEAU FICHIER - CORRECTION RETOUR HOME
-// ============================================================
 
 import React, { useState } from 'react';
 import {

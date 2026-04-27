@@ -1,6 +1,3 @@
-// ============================================================
-//  backend/src/admin/dto/admin.dto.ts
-// ============================================================
 import { IsString, IsNotEmpty, IsOptional, IsInt, Min, Max, IsIn, IsArray, IsNumber, ValidateNested, IsPositive } from 'class-validator';
 import { Type } from 'class-transformer';
 

@@ -1,14 +1,12 @@
-// ============================================================
-//  backend/src/customer/contract/contract.controller.ts
+
 //
-//  ✅ [E-HOUWIYA] Endpoint ajouté :
+//  [E-HOUWIYA] Endpoint ajouté :
 //  GET /customer/:id/contract/pdf-base64
 //    → Retourne le PDF en base64 (JSON)
 //    → Utilisé par ContractScreen pour :
 //      1. Afficher le PDF dans la WebView
 //      2. Envoyer le PDF à TunTrust pour signature E-Houwiya
-//
-//  Le reste est identique à l'original.
+
 // ============================================================
 import {
   Controller,

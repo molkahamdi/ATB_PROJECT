@@ -1,5 +1,3 @@
-// backend/src/admin/guards/admin-jwt.guard.ts
-// ✅ Vérifier que le payload est bien attaché à req.admin
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 

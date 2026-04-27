@@ -1,4 +1,4 @@
-// src/services/adminApi.ts
+
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 async function api<T>(path: string, method = 'GET', body?: object): Promise<T> {
@@ -168,3 +168,4 @@ export const getAuditLogs = (params: {
 
 export const getAuditStats = () =>
   api<AuditStats>('/admin/audit-logs/stats');
+

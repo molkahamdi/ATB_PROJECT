@@ -1,4 +1,4 @@
-// backend/src/notifications/notifications.controller.ts
+
 import { Controller, Get, Sse, Param, Patch, UseGuards } from '@nestjs/common';
 import { Observable, map } from 'rxjs';
 import { NotificationsService, Notification } from './notifications.service';

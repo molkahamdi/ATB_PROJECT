@@ -1,17 +1,8 @@
-// ============================================================
-//  frontend/services/customerApi.ts
-//
-//  ✅ [E-HOUWIYA] CORRECTION :
-//  updateEHouwiyaContact() est SUPPRIMÉE.
-//  email et phoneNumber sont verrouillés au même titre
-//  que les données d'identité — ils proviennent de E-Houwiya
-//  et ont été validés par TunTrust.
-//
-//  ✅ [DOCUMENT UPLOAD] CORRECTION :
+
+//  ✅ [DOCUMENT UPLOAD]  :
 //  Utilisation de expo-file-system/legacy avec uploadAsync()
-//  Solution 100% fonctionnelle et discrète
-//  Résout le problème d'affichage des documents dans l'admin
-//
+
+
 //  Fonctions disponibles :
 //  1. createCustomer()            → créer customer (MANUAL)
 //  2. simulateEHouwiya()          → créer customer + token (E-HOUWIYA)

@@ -1,5 +1,4 @@
-// ============================================================
-//  frontend/screens/DocumentsJustificatifsScreen.tsx
+
 //  ✅ CORRECTION : Upload réel du fichier vers le backend
 //     au lieu de stocker l'URI locale
 // ============================================================

@@ -1,7 +1,3 @@
-// ============================================================
-//  backend/src/admin/entities/admin-user.entity.ts
-//  Un seul rôle ADMIN — pas de hiérarchie complexe
-// ============================================================
 import {
   Entity, PrimaryGeneratedColumn, Column,
   CreateDateColumn, UpdateDateColumn,

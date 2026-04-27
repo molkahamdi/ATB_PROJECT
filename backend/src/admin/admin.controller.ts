@@ -1,9 +1,3 @@
-// ============================================================
-//  backend/src/admin/admin.controller.ts
-//  ✅ buildCtx corrigé — lit req.admin.adminId / req.admin.username
-//  ✅ VIEW_LIST et VIEW_DOCUMENT supprimés
-//  ✅ @Req() présent sur toutes les routes protégées
-// ============================================================
 import {
   Controller, Post, Get, Patch, Body, Param,
   Query, HttpCode, HttpStatus, UseGuards, Req,
@@ -137,4 +131,6 @@ export class AdminController implements OnModuleInit {
   getAuditStats() {
     return this.svc.getAuditStats();
   }
+
+
 }

@@ -1,4 +1,4 @@
-// frontend/types/navigation.ts
+
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp as RNRouteProp } from '@react-navigation/native';
 

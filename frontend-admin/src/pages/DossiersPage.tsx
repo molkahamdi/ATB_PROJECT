@@ -1,4 +1,4 @@
-// src/pages/DossiersPage.tsx
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getDossiers, type DossierSummary } from '../services/adminApi';

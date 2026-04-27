@@ -1,4 +1,4 @@
-// src/services/authStore.ts
+//ce fichier gère l'authentification de l'administrateur en utilisant Zustand pour stocker le token et les informations de l'administrateur, ainsi que les fonctions de connexion et de déconnexion.
 import { create } from 'zustand';
 import type { AdminInfo } from './adminApi';
 

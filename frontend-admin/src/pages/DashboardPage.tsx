@@ -1,4 +1,4 @@
-// src/pages/DashboardPage.tsx
+
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend } from 'chart.js';
@@ -6,6 +6,7 @@ import { Bar, Doughnut } from 'react-chartjs-2';
 import { getStats, getNotifications, markNotificationAsRead, markAllNotificationsAsRead, type AdminStats, type Notification } from '../services/adminApi';
 import { Spinner } from '../components/ui';
 import { Layout } from '../components/Layout';
+
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
 
@@ -357,7 +358,6 @@ export const DashboardPage: React.FC = () => {
             <div style={{ height: 210 }}><Doughnut data={doughnutStatut} options={donutOpts} redraw={false} /></div>
           </ChartCard>
         </div>
-
         {/* Action rapide */}
         {stats.totalSoumis > 0 && (
           <ActionCard
@@ -445,4 +445,6 @@ const ActionCard: React.FC<{ count: number; onClick: () => void; color: string }
     </div>
     <span style={{ fontSize: 16, color: color, opacity: 0.6, transition: 'transform 0.2s' }}>→</span>
   </div>
+
+  
 );

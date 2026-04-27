@@ -1,4 +1,4 @@
-// src/components/NotificationBell.tsx
+
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getNotifications, markNotificationAsRead, markAllNotificationsAsRead, type Notification } from '../services/adminApi';

@@ -1,23 +1,3 @@
-// ============================================================
-//  frontend/screens/OnboardingPersonalDataScreen.tsx
-//
-//  ✅ [E-HOUWIYA] Modifications apportées :
-//  ─────────────────────────────────────────
-//  1. Réception du paramètre eHouwiyaData depuis EHouwiyaScreen
-//  2. Pré-remplissage automatique de TOUS les champs
-//  3. Champs E-Houwiya = NON MODIFIABLES (editable={false})
-//     → identité + email + téléphone tous verrouillés
-//  4. Affichage d'un cadenas 🔒 sur chaque champ verrouillé
-//  5. Bannière verte "Données E-Houwiya — Non modifiables"
-//  6. En mode E-Houwiya : handleContinue appelle
-//     updateEHouwiyaContact() SUPPRIMÉ → juste navigate vers OTP
-//     car les données sont déjà en BDD depuis EHouwiyaService
-//
-//  IMPORTANT : En mode E-Houwiya, on ne recrée PAS le customer
-//  (il existe déjà depuis simulateEHouwiya côté backend).
-//  On passe directement à l'OTP avec le customerId existant.
-// ============================================================
-
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,

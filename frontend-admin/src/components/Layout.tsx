@@ -1,9 +1,9 @@
-// src/components/Layout.tsx
+
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../services/authStore';
 
-// Palette raffinée (identique au code 1)
+
 const palette = {
   bgSidebar:      '#0f172a',
   bgMain:         '#f7f8fa',
@@ -14,7 +14,7 @@ const palette = {
   danger:         '#b33a2c',
 };
 
-// Navigation (code 2 : sans Audit log, avec icônes)
+
 const NAV = [
   { path: '/dashboard', label: 'Tableau de bord' },
   { path: '/dossiers',  label: 'Total Dossiers' },

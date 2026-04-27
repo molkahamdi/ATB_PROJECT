@@ -1,28 +1,3 @@
-// ============================================================
-//  frontend/screens/RecapitulatifScreen.tsx
-//
-//  ✅ [E-HOUWIYA] Logique des sections :
-//  ─────────────────────────────────────────
-//  Section 1 — Informations personnelles
-//    → E-Houwiya : 🔒 VERROUILLÉE (certifiée TunTrust)
-//    → Manuel    : ✅ ÉDITABLE
-//
-//  Section 2 — Déclaration FATCA
-//    → E-Houwiya : ✅ ÉDITABLE (le client la remplit lui-même)
-//    → Manuel    : ✅ ÉDITABLE
-//    ⚠️  Le FATCA n'est PAS fourni par E-Houwiya / TunTrust.
-//    C'est une déclaration réglementaire remplie par le client
-//    pour identifier les liens avec les États-Unis.
-//    Si le client répond "Oui" → bloqué dans FATCAScreen.
-//    Donc toujours modifiable dans les deux flux.
-//
-//  Section 3 — Documents justificatifs
-//    → TOUJOURS 🔒 VERROUILLÉE (vérifiée par OCR)
-//
-//  Section 4 — Adresse & Situation professionnelle
-//    → TOUJOURS ✅ ÉDITABLE (non fourni par E-Houwiya)
-// ============================================================
-
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,

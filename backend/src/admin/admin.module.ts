@@ -1,6 +1,3 @@
-// ============================================================
-//  backend/src/admin/admin.module.ts
-// ============================================================
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminController } from './admin.controller';

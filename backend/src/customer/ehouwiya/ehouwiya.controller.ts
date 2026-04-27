@@ -1,7 +1,7 @@
 // ============================================================
-//  backend/src/customer/ehouwiya/ehouwiya.controller.ts
-//
-//  ✅ CORRECTIONS APPORTÉES :
+
+
+
 //  ──────────────────────────────────────────────────────────
 //  1. POST /customer/ehouwiya/simulate
 //     → Vérifie maintenant que la CIN n'est pas déjà finalisée

@@ -1,6 +1,4 @@
-// ============================================================
-//  frontend/screens/ContractScreen.tsx
-//
+
 //  ✅ [E-HOUWIYA] Modifications apportées :
 //  ─────────────────────────────────────────
 //  1. Détection du flux E-Houwiya via identificationSource
