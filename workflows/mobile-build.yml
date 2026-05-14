@@ -1,0 +1,49 @@
+name: Mobile Build — APK Debug
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'frontend/**'
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Setup Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Build APK Debug
+        run: cd android && ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ATB-DigiPack-APK-${{ github.sha }}
+          path: frontend/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30

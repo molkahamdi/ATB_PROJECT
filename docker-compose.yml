@@ -1,0 +1,78 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: atb_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - atb_network
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: atb_backend
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      PORT: ${PORT}
+      POSTGRES_HOST: postgres          
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+      OCR_SERVICE_URL: http://ocr-service:8001
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      FIXED_RECEIVER_EMAIL: ${FIXED_RECEIVER_EMAIL}
+      EHOUWIYA_JWT_SECRET: ${JWT_SECRET_EHOUWIYA}
+      ADMIN_JWT_SECRET: ${JWT_SECRET_ADMIN}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - atb_network
+
+  frontend-admin:
+    build:
+      context: ./frontend-admin
+      dockerfile: Dockerfile
+    container_name: atb_frontend_admin
+    restart: unless-stopped
+        
+    ports:
+      - '5173:5173'
+    depends_on:
+      - backend
+    networks:
+      - atb_network
+
+  ocr-service:
+    build:
+      context: ./ocr-service
+      dockerfile: Dockerfile
+    container_name: atb_ocr
+    restart: unless-stopped
+    ports:
+      - '8001:8001'
+    networks:
+      - atb_network
+
+volumes:
+  postgres_data:
+
+networks:
+  atb_network:
+    driver: bridge

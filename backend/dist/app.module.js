@@ -9,7 +9,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
-const typeorm_1 = require("@nestjs/typeorm");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const customer_entity_1 = require("./customer/entities/customer.entity");
@@ -20,6 +19,7 @@ const admin_user_entity_1 = require("./admin/entities/admin-user.entity");
 const admin_module_1 = require("./admin/admin.module");
 const notifications_module_1 = require("./notifications/notifications.module");
 const audit_log_entity_1 = require("./admin/entities/audit-log.entity");
+const typeorm_1 = require("@nestjs/typeorm");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;

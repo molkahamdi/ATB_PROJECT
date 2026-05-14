@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { Customer } from './customer/entities/customer.entity';
@@ -11,7 +10,7 @@ import { AdminUser } from './admin/entities/admin-user.entity';
 import { AdminModule }    from './admin/admin.module'; 
 import { NotificationsModule } from './notifications/notifications.module';
 import { AuditLog } from './admin/entities/audit-log.entity';
-
+import { TypeOrmModule } from '@nestjs/typeorm';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
