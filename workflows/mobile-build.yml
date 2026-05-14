@@ -2,7 +2,7 @@ name: Mobile Build — APK Debug
 
 on:
   push:
-    branches: [master]
+    branches: [main]
     paths:
       - 'frontend/**'
   workflow_dispatch:

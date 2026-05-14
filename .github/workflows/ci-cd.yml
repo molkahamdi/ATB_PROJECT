@@ -2,9 +2,9 @@ name: CI/CD — Deploy Docker Compose
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
+    branches: [main]
 
 jobs:
   build-and-test:
@@ -38,7 +38,7 @@ jobs:
     name: Deploy to Server
     runs-on: ubuntu-latest
     needs: build-and-test
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -51,7 +51,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /opt/atb-digipack
-            git pull origin master
+            git pull origin main
             echo '${{ secrets.ENV_FILE }}' > .env
             docker compose down
             docker compose up -d --build
