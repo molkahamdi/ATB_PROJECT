@@ -11,12 +11,21 @@ import { AdminModule }    from './admin/admin.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AuditLog } from './admin/entities/audit-log.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
+import { MetricsController } from './metrics.controller';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
 
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
+      imports: [ConfigModule,
+        PrometheusModule.register({
+      path: '/metrics',
+      defaultMetrics: {
+        enabled: true,   // CPU, mémoire, event loop automatiques
+      },
+    }),
+      ],
       inject: [ConfigService],
       useFactory: (cfg: ConfigService) => ({
         type: 'postgres',
@@ -37,7 +46,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
      AdminModule,
      NotificationsModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController,  MetricsController],
   providers: [AppService],
 })
 export class AppModule {}

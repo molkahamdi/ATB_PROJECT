@@ -1,0 +1,13 @@
+#Ce fichier dit à Grafana de charger automatiquement les dashboards 
+# monitoring/grafana/provisioning/dashboards/dashboard.yml
+apiVersion: 1
+
+providers:
+  - name: 'ATB-DigiPack'
+    orgId: 1
+    folder: 'ATB DigiPack'
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /etc/grafana/provisioning/dashboards

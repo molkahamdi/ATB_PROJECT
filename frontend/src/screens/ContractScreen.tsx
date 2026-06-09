@@ -41,7 +41,7 @@ type Props = {
   route:      RouteProp<'ContractScreen'>;
 };
 
-const BASE_URL = 'http://192.168.1.100:3000';
+const BASE_URL = 'http://192.168.100.6:3000';
 
 // ── Header ─────────────────────────────────────────────────
 const Header: React.FC = () => (

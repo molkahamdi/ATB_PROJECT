@@ -6,3 +6,4 @@ paddleocr==2.9.1
 paddlepaddle==2.6.2
 Pillow==10.3.0
 python-multipart==0.0.9
+prometheus-client==0.20.0
