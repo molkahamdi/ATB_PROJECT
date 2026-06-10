@@ -53,29 +53,24 @@ jobs:
         working-directory: ./frontend
         run: npx expo prebuild --platform android --clean
 
-      - name: Create keystore.properties for signing
+      - name: Configure gradle.properties (disable AAPT2)
         working-directory: ./frontend/android
         run: |
-          echo "storePassword=atb123456" > keystore.properties
-          echo "keyPassword=atb123456" >> keystore.properties
-          echo "keyAlias=upload" >> keystore.properties
-          echo "storeFile=../upload-keystore.jks" >> keystore.properties
+          echo "android.enableAapt2=false" >> gradle.properties
+          echo "android.useAndroidX=true" >> gradle.properties
+          echo "org.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m" >> gradle.properties
 
-      - name: Generate keystore
-        working-directory: ./frontend
-        run: |
-          keytool -genkey -v -keystore upload-keystore.jks \
-            -alias upload -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass atb123456 -keypass atb123456 \
-            -dname "CN=ATB, OU=IT, O=ATB, L=Tunis, S=Tunis, C=TN"
+      - name: Make gradlew executable
+        working-directory: ./frontend/android
+        run: chmod +x gradlew
 
       - name: Build APK Release
         working-directory: ./frontend/android
-        run: ./gradlew assembleRelease --stacktrace
+        run: ./gradlew assembleRelease --stacktrace --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: ATB-DigiPack-Release
           path: ./frontend/android/app/build/outputs/apk/release/*.apk
-          retention-days: 30 
+          retention-days: 30
