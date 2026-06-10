@@ -14,8 +14,8 @@ describe('AppController', () => {
     appController = app.get<AppController>(AppController);
   });
   describe('root', () => {
-    it('should return "WELCOME TO ATBDIGIPACK!"', () => {
-      expect(appController.getHello()).toBe('WELCOME TO ATBDIGIPACK!');
+    it('should return "WELCOME TO ATBDIGIPACKV2!"', () => {
+      expect(appController.getHello()).toBe('WELCOME TO ATBDIGIPACKV2!');
     });
   });
 });
