@@ -43,6 +43,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Test SSH Connection
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/test_key
+          chmod 600 /tmp/test_key
+          ssh -i /tmp/test_key -o StrictHostKeyChecking=no ubuntu@57.129.112.6 "echo SSH_OK"
+
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
