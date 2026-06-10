@@ -1,4 +1,4 @@
-name: Mobile Build — APK Release
+name: Mobile Build — APK Debug
 
 on:
   push:
@@ -44,30 +44,31 @@ jobs:
         working-directory: ./frontend
         run: |
           mkdir -p assets
-          curl -o assets/icon.png https://raw.githubusercontent.com/expo/expo/master/templates/expo-template-blank/assets/icon.png
-          curl -o assets/adaptive-icon.png https://raw.githubusercontent.com/expo/expo/master/templates/expo-template-blank/assets/adaptive-icon.png
-          curl -o assets/splash-icon.png https://raw.githubusercontent.com/expo/expo/master/templates/expo-template-blank/assets/splash.png
+          curl -s -o assets/icon.png https://raw.githubusercontent.com/expo/expo/master/templates/expo-template-blank/assets/icon.png
+          curl -s -o assets/adaptive-icon.png https://raw.githubusercontent.com/expo/expo/master/templates/expo-template-blank/assets/adaptive-icon.png
+          curl -s -o assets/splash.png https://raw.githubusercontent.com/expo/expo/master/templates/expo-template-blank/assets/splash.png
 
       - name: Prebuild for Android
         working-directory: ./frontend
         run: npx expo prebuild --platform android --clean
 
-      - name: Remove corrupted images from build
-        working-directory: ./frontend/android/app/src/main/res
+      - name: Remove conflicting gradle.properties
+        working-directory: ./frontend/android
         run: |
-          find . -name "*.png" -type f -exec file {} \; | grep -v "PNG image" | cut -d: -f1 | xargs rm -f 2>/dev/null || true
+          rm -f gradle.properties
+          rm -f app/gradle.properties 2>/dev/null || true
 
       - name: Make gradlew executable
         working-directory: ./frontend/android
         run: chmod +x gradlew
 
-      - name: Build APK Release
+      - name: Build APK Debug
         working-directory: ./frontend/android
-        run: ./gradlew assembleRelease --stacktrace --no-daemon
+        run: ./gradlew assembleDebug --stacktrace --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: ATB-DigiPack-Release
-          path: ./frontend/android/app/build/outputs/apk/release/*.apk
+          name: ATB-DigiPack-Debug
+          path: ./frontend/android/app/build/outputs/apk/debug/*.apk
           retention-days: 30
