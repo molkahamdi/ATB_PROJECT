@@ -11,9 +11,6 @@ jobs:
   build-android:
     name: Build Android APK
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./frontend
 
     steps:
       - name: Checkout code
@@ -32,18 +29,32 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Install dependencies
+        working-directory: ./frontend
         run: npm ci
 
+      - name: Create .env file
+        working-directory: ./frontend
+        run: echo "EXPO_PUBLIC_API_URL=http://57.129.112.6:3000" > .env
+
+      - name: Prebuild for Android
+        working-directory: ./frontend
+        run: npx expo prebuild --platform android --clean
+
       - name: Make gradlew executable
-        run: chmod +x android/gradlew
+        working-directory: ./frontend/android
+        run: chmod +x gradlew
 
       - name: Build APK Debug
-        run: cd android && ./gradlew assembleDebug --stacktrace
+        working-directory: ./frontend/android
+        run: ./gradlew assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: ATB-DigiPack-APK-${{ github.sha }}
-          path: frontend/android/app/build/outputs/apk/debug/app-debug.apk
+          name: ATB-DigiPack-APK
+          path: ./frontend/android/app/build/outputs/apk/debug/*.apk
           retention-days: 30
