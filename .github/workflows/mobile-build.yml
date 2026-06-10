@@ -40,25 +40,22 @@ jobs:
         working-directory: ./frontend
         run: echo "EXPO_PUBLIC_API_URL=http://57.129.112.6:3000" > .env
 
-      - name: Create missing assets
+      - name: Create valid assets
         working-directory: ./frontend
         run: |
           mkdir -p assets
-          echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" | base64 -d > assets/icon.png
-          cp assets/icon.png assets/adaptive-icon.png
-          cp assets/icon.png assets/favicon.png
-          cp assets/icon.png assets/splash-icon.png
+          curl -o assets/icon.png https://raw.githubusercontent.com/expo/expo/master/templates/expo-template-blank/assets/icon.png
+          curl -o assets/adaptive-icon.png https://raw.githubusercontent.com/expo/expo/master/templates/expo-template-blank/assets/adaptive-icon.png
+          curl -o assets/splash-icon.png https://raw.githubusercontent.com/expo/expo/master/templates/expo-template-blank/assets/splash.png
 
       - name: Prebuild for Android
         working-directory: ./frontend
         run: npx expo prebuild --platform android --clean
 
-      - name: Configure gradle.properties (disable AAPT2)
-        working-directory: ./frontend/android
+      - name: Remove corrupted images from build
+        working-directory: ./frontend/android/app/src/main/res
         run: |
-          echo "android.enableAapt2=false" >> gradle.properties
-          echo "android.useAndroidX=true" >> gradle.properties
-          echo "org.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m" >> gradle.properties
+          find . -name "*.png" -type f -exec file {} \; | grep -v "PNG image" | cut -d: -f1 | xargs rm -f 2>/dev/null || true
 
       - name: Make gradlew executable
         working-directory: ./frontend/android
