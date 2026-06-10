@@ -5,7 +5,7 @@
 // ✅ CIN_RECTO : comparaison arabe ↔ arabe (lastNameArabic / firstNameArabic)
 
 import { API_URL } from '../config';
-const BASE_URL = API_URL;
+const BACKEND_URL = API_URL;
 
 export type DocType     = 'CIN_RECTO' | 'CIN_VERSO' | 'PASSPORT';
 export type MatchStatus = 'MATCH' | 'PARTIAL' | 'MISMATCH' | 'UNVERIFIED';
