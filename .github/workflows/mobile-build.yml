@@ -1,4 +1,4 @@
-name: Mobile Build — APK
+name: Mobile Build — APK Debug
 
 on:
   push:
@@ -44,19 +44,16 @@ jobs:
         working-directory: ./frontend
         run: |
           mkdir -p assets
-          curl -s -o assets/icon.png https://raw.githubusercontent.com/expo/expo/master/templates/expo-template-blank/assets/icon.png
-          curl -s -o assets/adaptive-icon.png https://raw.githubusercontent.com/expo/expo/master/templates/expo-template-blank/assets/adaptive-icon.png
-          curl -s -o assets/splash.png https://raw.githubusercontent.com/expo/expo/master/templates/expo-template-blank/assets/splash.png
+          # Créer un PNG valide (1x1 pixel transparent)
+          echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" | base64 -d > assets/icon.png
+          cp assets/icon.png assets/adaptive-icon.png
+          cp assets/icon.png assets/splash-icon.png
+          cp assets/icon.png assets/splash.png
+          cp assets/icon.png assets/favicon.png
 
       - name: Prebuild for Android
         working-directory: ./frontend
         run: npx expo prebuild --platform android --clean
-
-      - name: Remove conflicting gradle.properties
-        working-directory: ./frontend/android
-        run: |
-          rm -f gradle.properties
-          rm -f app/gradle.properties 2>/dev/null || true
 
       - name: Make gradlew executable
         working-directory: ./frontend/android
