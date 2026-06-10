@@ -18,7 +18,8 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BASE_URL = 'http://192.168.100.6:3000';
+import { API_URL } from '../config';
+const BASE_URL = API_URL;
 
 async function apiCall<T>(
   endpoint: string,

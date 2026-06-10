@@ -22,6 +22,8 @@ async function bootstrap() {
       'http://57.129.112.6:80',
       'http://57.129.112.6:5173',
       'http://57.129.112.6:3001',
+       'http://10.0.2.2:8081',     // émulateur Android
+       'http://localhost:8081'
     ],
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],

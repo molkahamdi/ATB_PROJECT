@@ -41,7 +41,8 @@ type Props = {
   route:      RouteProp<'ContractScreen'>;
 };
 
-const BASE_URL = 'http://192.168.100.6:3000';
+import { API_URL } from '../config';
+const BASE_URL = API_URL;
 
 // ── Header ─────────────────────────────────────────────────
 const Header: React.FC = () => (
