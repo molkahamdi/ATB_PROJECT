@@ -43,24 +43,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Test SSH Connection
+      - name: Setup SSH key
         run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/test_key
-          chmod 600 /tmp/test_key
-          ssh -i /tmp/test_key -o StrictHostKeyChecking=no ubuntu@57.129.112.6 "echo SSH_OK"
+          mkdir -p ~/.ssh
+          printf '%s' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H 57.129.112.6 >> ~/.ssh/known_hosts
 
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd /opt/atb-digipack
-            git pull origin main
-            echo '${{ secrets.ENV_FILE }}' > .env
-            echo 'VITE_API_URL=http://57.129.112.6:3000' > frontend-admin/.env.production
-            docker compose down
-            docker compose up -d --build
-            docker system prune -f
-            docker compose ps
+      - name: Test SSH
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ubuntu@57.129.112.6 "echo SSH_OK"
+
+      - name: Deploy to VPS
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ubuntu@57.129.112.6 bash << 'ENDSSH'
+          cd /opt/atb-digipack
+          git pull origin main
+          echo 'VITE_API_URL=http://57.129.112.6:3000' > frontend-admin/.env.production
+          docker compose down
+          docker compose up -d --build
+          docker system prune -f
+          docker compose ps
+          ENDSSH
