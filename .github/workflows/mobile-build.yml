@@ -1,4 +1,4 @@
-name: Mobile Build — APK Debug
+name: Mobile Build — APK Release
 
 on:
   push:
@@ -40,11 +40,10 @@ jobs:
         working-directory: ./frontend
         run: echo "EXPO_PUBLIC_API_URL=http://57.129.112.6:3000" > .env
 
-      - name: Create missing assets folder and icons
+      - name: Create missing assets
         working-directory: ./frontend
         run: |
           mkdir -p assets
-          # Create a simple 512x512 PNG icon (transparent) using base64
           echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" | base64 -d > assets/icon.png
           cp assets/icon.png assets/adaptive-icon.png
           cp assets/icon.png assets/favicon.png
@@ -54,17 +53,29 @@ jobs:
         working-directory: ./frontend
         run: npx expo prebuild --platform android --clean
 
-      - name: Make gradlew executable
+      - name: Create keystore.properties for signing
         working-directory: ./frontend/android
-        run: chmod +x gradlew
+        run: |
+          echo "storePassword=atb123456" > keystore.properties
+          echo "keyPassword=atb123456" >> keystore.properties
+          echo "keyAlias=upload" >> keystore.properties
+          echo "storeFile=../upload-keystore.jks" >> keystore.properties
 
-      - name: Build APK Debug
+      - name: Generate keystore
+        working-directory: ./frontend
+        run: |
+          keytool -genkey -v -keystore upload-keystore.jks \
+            -alias upload -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass atb123456 -keypass atb123456 \
+            -dname "CN=ATB, OU=IT, O=ATB, L=Tunis, S=Tunis, C=TN"
+
+      - name: Build APK Release
         working-directory: ./frontend/android
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleRelease --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: ATB-DigiPack-APK
-          path: ./frontend/android/app/build/outputs/apk/debug/*.apk
-          retention-days: 30
+          name: ATB-DigiPack-Release
+          path: ./frontend/android/app/build/outputs/apk/release/*.apk
+          retention-days: 30 
