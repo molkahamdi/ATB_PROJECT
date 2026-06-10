@@ -40,6 +40,16 @@ jobs:
         working-directory: ./frontend
         run: echo "EXPO_PUBLIC_API_URL=http://57.129.112.6:3000" > .env
 
+      - name: Create missing assets folder and icons
+        working-directory: ./frontend
+        run: |
+          mkdir -p assets
+          # Create a simple 512x512 PNG icon (transparent) using base64
+          echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" | base64 -d > assets/icon.png
+          cp assets/icon.png assets/adaptive-icon.png
+          cp assets/icon.png assets/favicon.png
+          cp assets/icon.png assets/splash-icon.png
+
       - name: Prebuild for Android
         working-directory: ./frontend
         run: npx expo prebuild --platform android --clean
