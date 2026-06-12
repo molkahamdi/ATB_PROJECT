@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '20.19.4'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
@@ -32,14 +32,16 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Install imagemagick
+        run: sudo apt-get install -y imagemagick
+
       - name: Install dependencies
         working-directory: ./frontend
         run: npm ci
 
       - name: Create .env file
         working-directory: ./frontend
-        run: |
-          echo "EXPO_PUBLIC_API_URL=http://57.129.112.6:3000" > .env
+        run: echo "EXPO_PUBLIC_API_URL=http://57.129.112.6:3000" > .env
 
       - name: Create assets
         working-directory: ./frontend
@@ -51,9 +53,46 @@ jobs:
           cp assets/icon.png assets/splash.png
           cp assets/icon.png assets/favicon.png
 
+      - name: Fix corrupted PNG assets
+        working-directory: ./frontend
+        run: |
+          echo "Recherche et correction des PNG corrompus..."
+          find . -not -path "*/node_modules/*" -not -path "*/.git/*" -name "*.png" | while read f; do
+            if ! python3 -c "
+          from PIL import Image
+          import sys
+          try:
+              img = Image.open('$f')
+              img.verify()
+          except Exception as e:
+              sys.exit(1)
+          " 2>/dev/null; then
+              echo "PNG corrompu detecte: $f"
+              convert "$f" /tmp/fixed_asset.png 2>/dev/null && cp /tmp/fixed_asset.png "$f" && echo "Corrige: $f" || echo "Impossible de corriger: $f"
+            fi
+          done
+          pip install Pillow -q
+          find . -not -path "*/node_modules/*" -name "tunisiaflag*" | while read f; do
+            echo "Force reconversion tunisiaflag: $f"
+            convert "$f" -strip -define png:compression-filter=0 -define png:compression-level=9 /tmp/flag_fixed.png && cp /tmp/flag_fixed.png "$f"
+            echo "tunisiaflag corrige!"
+          done
+
       - name: Prebuild Android
         working-directory: ./frontend
         run: npx expo prebuild --platform android --clean --no-install
+
+      - name: Fix PNG after prebuild
+        working-directory: ./frontend
+        run: |
+          echo "Correction PNG apres prebuild..."
+          find android -name "tunisiaflag*" 2>/dev/null | while read f; do
+            echo "Correction post-prebuild: $f"
+            convert "$f" -strip /tmp/fixed.png && cp /tmp/fixed.png "$f"
+          done
+          find android/app/src -name "*.png" 2>/dev/null | while read f; do
+            convert "$f" -strip "$f" 2>/dev/null || true
+          done
 
       - name: Make gradlew executable
         working-directory: ./frontend/android
@@ -62,24 +101,10 @@ jobs:
       - name: Build APK Release
         working-directory: ./frontend/android
         run: ./gradlew assembleRelease --no-daemon
-      
 
-      - name: Fix asset files
-        working-directory: ./frontend
-        run: |
-          # Trouver et recompresser les PNG problématiques
-          find . -path ./node_modules -prune -o -name "*.png" -print | while read f; do
-            if file "$f" | grep -v "PNG image"; then
-              echo "Fixing: $f"
-              convert "$f" "$f" 2>/dev/null || true
-            fi
-          done
-          # Vérifier spécifiquement tunisiaflag
-          find . -name "tunisiaflag*" -not -path "*/node_modules/*"
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: ATB-DigiPack-APK-${{ github.run_number }}
           path: ./frontend/android/app/build/outputs/apk/release/*.apk
           retention-days: 30
-      
