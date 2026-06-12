@@ -62,10 +62,24 @@ jobs:
       - name: Build APK Release
         working-directory: ./frontend/android
         run: ./gradlew assembleRelease --no-daemon
+      
 
+      - name: Fix asset files
+        working-directory: ./frontend
+        run: |
+          # Trouver et recompresser les PNG problématiques
+          find . -path ./node_modules -prune -o -name "*.png" -print | while read f; do
+            if file "$f" | grep -v "PNG image"; then
+              echo "Fixing: $f"
+              convert "$f" "$f" 2>/dev/null || true
+            fi
+          done
+          # Vérifier spécifiquement tunisiaflag
+          find . -name "tunisiaflag*" -not -path "*/node_modules/*"
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: ATB-DigiPack-APK-${{ github.run_number }}
           path: ./frontend/android/app/build/outputs/apk/release/*.apk
           retention-days: 30
+      
