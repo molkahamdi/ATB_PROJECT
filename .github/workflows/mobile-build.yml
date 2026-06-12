@@ -1,4 +1,4 @@
-name: Mobile Build — APK Debug
+name: Mobile Build — APK Release
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-android:
-    name: Build Android APK
+    name: Build Android APK Release
     runs-on: ubuntu-latest
 
     steps:
@@ -40,11 +40,10 @@ jobs:
         working-directory: ./frontend
         run: echo "EXPO_PUBLIC_API_URL=http://57.129.112.6:3000" > .env
 
-      - name: Create valid assets
+      - name: Create assets
         working-directory: ./frontend
         run: |
           mkdir -p assets
-          # Créer un PNG valide (1x1 pixel transparent)
           echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" | base64 -d > assets/icon.png
           cp assets/icon.png assets/adaptive-icon.png
           cp assets/icon.png assets/splash-icon.png
@@ -59,13 +58,24 @@ jobs:
         working-directory: ./frontend/android
         run: chmod +x gradlew
 
-      - name: Build APK Debug
+      - name: Bundle JavaScript
+        working-directory: ./frontend
+        run: |
+          mkdir -p android/app/src/main/assets
+          npx react-native bundle \
+            --platform android \
+            --dev false \
+            --entry-file index.js \
+            --bundle-output android/app/src/main/assets/index.android.bundle \
+            --assets-dest android/app/src/main/res
+
+      - name: Build APK Release unsigned
         working-directory: ./frontend/android
-        run: ./gradlew assembleDebug --stacktrace --no-daemon
+        run: ./gradlew assembleRelease --no-daemon -x bundleReleaseJsAndAssets
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: ATB-DigiPack-Debug
-          path: ./frontend/android/app/build/outputs/apk/debug/*.apk
+          name: ATB-DigiPack-Release-${{ github.run_number }}
+          path: ./frontend/android/app/build/outputs/apk/release/*.apk
           retention-days: 30
