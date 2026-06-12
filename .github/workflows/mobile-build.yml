@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-android:
-    name: Build Android APK Release
+    name: Build Android APK
     runs-on: ubuntu-latest
 
     steps:
@@ -38,7 +38,8 @@ jobs:
 
       - name: Create .env file
         working-directory: ./frontend
-        run: echo "EXPO_PUBLIC_API_URL=http://57.129.112.6:3000" > .env
+        run: |
+          echo "EXPO_PUBLIC_API_URL=http://57.129.112.6:3000" > .env
 
       - name: Create assets
         working-directory: ./frontend
@@ -50,32 +51,21 @@ jobs:
           cp assets/icon.png assets/splash.png
           cp assets/icon.png assets/favicon.png
 
-      - name: Prebuild for Android
+      - name: Prebuild Android
         working-directory: ./frontend
-        run: npx expo prebuild --platform android --clean
+        run: npx expo prebuild --platform android --clean --no-install
 
       - name: Make gradlew executable
         working-directory: ./frontend/android
         run: chmod +x gradlew
 
-      - name: Bundle JavaScript
-        working-directory: ./frontend
-        run: |
-          mkdir -p android/app/src/main/assets
-          npx react-native bundle \
-            --platform android \
-            --dev false \
-            --entry-file index.js \
-            --bundle-output android/app/src/main/assets/index.android.bundle \
-            --assets-dest android/app/src/main/res
-
-      - name: Build APK Release unsigned
+      - name: Build APK Release
         working-directory: ./frontend/android
-        run: ./gradlew assembleRelease --no-daemon -x bundleReleaseJsAndAssets
+        run: ./gradlew assembleRelease --no-daemon
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: ATB-DigiPack-Release-${{ github.run_number }}
+          name: ATB-DigiPack-APK-${{ github.run_number }}
           path: ./frontend/android/app/build/outputs/apk/release/*.apk
           retention-days: 30
