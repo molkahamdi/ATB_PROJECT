@@ -46,63 +46,43 @@ jobs:
       - name: Force production API URL in config.ts
         working-directory: ./frontend/src
         run: |
-          # Créer un nouveau config.ts avec l'URL de production forcée
           cat > config.ts << 'EOF'
-          // frontend/src/config.ts
           const DEV_URL  = 'http://192.168.100.6:3000';
           const PROD_URL = 'http://57.129.112.6:3000';
-
-          // Force l'utilisation de l'URL de production pour l'APK Release
           export const API_URL = PROD_URL;
-
           console.log(`[CONFIG] API_URL = ${API_URL}`);
           EOF
-          echo "✅ config.ts mis à jour avec URL production:"
-          cat config.ts
+          echo "✅ config.ts mis à jour"
 
       - name: Create assets
         working-directory: ./frontend
         run: |
           mkdir -p assets
-          # Utiliser le logo ATB s'il existe, sinon créer un logo par défaut
+          echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" | base64 -d > assets/icon.png
+          cp assets/icon.png assets/adaptive-icon.png
+          cp assets/icon.png assets/splash-icon.png
+          cp assets/icon.png assets/splash.png
+          cp assets/icon.png assets/favicon.png
           if [ -f src/assets/atb.png ]; then
             cp src/assets/atb.png assets/icon.png
             cp src/assets/atb.png assets/adaptive-icon.png
+            cp src/assets/atb.png assets/splash-icon.png
             cp src/assets/atb.png assets/splash.png
             cp src/assets/atb.png assets/favicon.png
             echo "✅ Logo ATB utilisé"
-          else
-            echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" | base64 -d > assets/icon.png
-            cp assets/icon.png assets/adaptive-icon.png
-            cp assets/icon.png assets/splash-icon.png
-            cp assets/icon.png assets/splash.png
-            cp assets/icon.png assets/favicon.png
-            echo "⚠️ Logo par défaut utilisé"
           fi
+          echo "Assets créés:"
+          ls -la assets/
 
       - name: Fix corrupted PNG assets
         working-directory: ./frontend
         run: |
-          echo "Recherche et correction des PNG corrompus..."
-          find . -not -path "*/node_modules/*" -not -path "*/.git/*" -name "*.png" | while read f; do
-            if ! python3 -c "
-          from PIL import Image
-          import sys
-          try:
-              img = Image.open('$f')
-              img.verify()
-          except Exception as e:
-              sys.exit(1)
-          " 2>/dev/null; then
-              echo "PNG corrompu detecte: $f"
-              convert "$f" /tmp/fixed_asset.png 2>/dev/null && cp /tmp/fixed_asset.png "$f" && echo "Corrige: $f" || echo "Impossible de corriger: $f"
-            fi
-          done
           pip install Pillow -q
-          find . -not -path "*/node_modules/*" -name "tunisiaflag*" | while read f; do
-            echo "Force reconversion tunisiaflag: $f"
-            convert "$f" -strip -define png:compression-filter=0 -define png:compression-level=9 /tmp/flag_fixed.png && cp /tmp/flag_fixed.png "$f"
-            echo "tunisiaflag corrige!"
+          find . -not -path "*/node_modules/*" -name "*.png" | while read f; do
+            if ! python3 -c "from PIL import Image; Image.open('$f').verify()" 2>/dev/null; then
+              echo "Fixing: $f"
+              convert "$f" /tmp/fixed.png 2>/dev/null && cp /tmp/fixed.png "$f" || true
+            fi
           done
 
       - name: Prebuild Android
@@ -112,12 +92,7 @@ jobs:
       - name: Fix PNG after prebuild
         working-directory: ./frontend
         run: |
-          echo "Correction PNG apres prebuild..."
-          find android -name "tunisiaflag*" 2>/dev/null | while read f; do
-            echo "Correction post-prebuild: $f"
-            convert "$f" -strip /tmp/fixed.png && cp /tmp/fixed.png "$f"
-          done
-          find android/app/src -name "*.png" 2>/dev/null | while read f; do
+          find android -name "*.png" 2>/dev/null | while read f; do
             convert "$f" -strip "$f" 2>/dev/null || true
           done
 
@@ -134,4 +109,4 @@ jobs:
         with:
           name: ATB-DigiPack-APK-${{ github.run_number }}
           path: ./frontend/android/app/build/outputs/apk/release/*.apk
-          retention-days: 30 
+          retention-days: 30
