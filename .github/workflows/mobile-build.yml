@@ -43,15 +43,42 @@ jobs:
         working-directory: ./frontend
         run: echo "EXPO_PUBLIC_API_URL=http://57.129.112.6:3000" > .env
 
+      - name: Force production API URL in config.ts
+        working-directory: ./frontend/src
+        run: |
+          # Créer un nouveau config.ts avec l'URL de production forcée
+          cat > config.ts << 'EOF'
+          // frontend/src/config.ts
+          const DEV_URL  = 'http://192.168.100.6:3000';
+          const PROD_URL = 'http://57.129.112.6:3000';
+
+          // Force l'utilisation de l'URL de production pour l'APK Release
+          export const API_URL = PROD_URL;
+
+          console.log(`[CONFIG] API_URL = ${API_URL}`);
+          EOF
+          echo "✅ config.ts mis à jour avec URL production:"
+          cat config.ts
+
       - name: Create assets
         working-directory: ./frontend
         run: |
           mkdir -p assets
-          echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" | base64 -d > assets/icon.png
-          cp assets/icon.png assets/adaptive-icon.png
-          cp assets/icon.png assets/splash-icon.png
-          cp assets/icon.png assets/splash.png
-          cp assets/icon.png assets/favicon.png
+          # Utiliser le logo ATB s'il existe, sinon créer un logo par défaut
+          if [ -f src/assets/atb.png ]; then
+            cp src/assets/atb.png assets/icon.png
+            cp src/assets/atb.png assets/adaptive-icon.png
+            cp src/assets/atb.png assets/splash.png
+            cp src/assets/atb.png assets/favicon.png
+            echo "✅ Logo ATB utilisé"
+          else
+            echo "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==" | base64 -d > assets/icon.png
+            cp assets/icon.png assets/adaptive-icon.png
+            cp assets/icon.png assets/splash-icon.png
+            cp assets/icon.png assets/splash.png
+            cp assets/icon.png assets/favicon.png
+            echo "⚠️ Logo par défaut utilisé"
+          fi
 
       - name: Fix corrupted PNG assets
         working-directory: ./frontend
@@ -107,4 +134,4 @@ jobs:
         with:
           name: ATB-DigiPack-APK-${{ github.run_number }}
           path: ./frontend/android/app/build/outputs/apk/release/*.apk
-          retention-days: 30
+          retention-days: 30 
