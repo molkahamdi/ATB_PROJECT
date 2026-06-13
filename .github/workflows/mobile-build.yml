@@ -107,6 +107,36 @@ jobs:
         working-directory: ./frontend
         run: npx expo prebuild --platform android --clean --no-install
 
+      - name: Add ProGuard rules for Expo FileSystem
+        working-directory: ./frontend/android/app
+        run: |
+          cat >> proguard-rules.pro << 'EOF'
+
+          # Expo FileSystem
+          -keep class expo.modules.filesystem.** { *; }
+          -keep class expo.modules.kotlin.** { *; }
+          -keep class expo.modules.** { *; }
+
+          # React Native
+          -keep class com.facebook.react.** { *; }
+          -keep class com.facebook.hermes.** { *; }
+
+          # Expo modules généraux
+          -keep @expo.modules.core.interfaces.Package class * { *; }
+          -keepclassmembers class * {
+              @expo.modules.core.ExportedFunction *;
+          }
+          EOF
+          echo "✅ ProGuard rules added for Expo FileSystem"
+
+      - name: Disable minification for Release build
+        working-directory: ./frontend/android/app
+        run: |
+          # Désactiver ProGuard (minification) pour garder toutes les classes natives
+          sed -i 's/minifyEnabled true/minifyEnabled false/' build.gradle
+          sed -i 's/shrinkResources true/shrinkResources false/' build.gradle 2>/dev/null || true
+          echo "✅ Minification disabled for Release build"
+
       - name: Allow cleartext HTTP traffic in AndroidManifest.xml
         working-directory: ./frontend/android/app/src/main
         run: |
