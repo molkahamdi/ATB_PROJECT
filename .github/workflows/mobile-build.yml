@@ -107,6 +107,17 @@ jobs:
         working-directory: ./frontend
         run: npx expo prebuild --platform android --clean --no-install
 
+      - name: Allow cleartext HTTP traffic in AndroidManifest.xml
+        working-directory: ./frontend/android/app/src/main
+        run: |
+          if ! grep -q "usesCleartextTraffic" AndroidManifest.xml; then
+            sed -i 's/<application /<application android:usesCleartextTraffic="true" /' AndroidManifest.xml
+            echo "✅ HTTP cleartext traffic allowed"
+          else
+            echo "✅ Already configured"
+          fi
+          grep "usesCleartextTraffic" AndroidManifest.xml
+
       - name: Fix PNG after prebuild
         working-directory: ./frontend
         run: |
