@@ -59,7 +59,7 @@ jobs:
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ubuntu@57.129.112.6 bash << 'ENDSSH'
           cd /opt/atb-digipack
           git pull origin main
-          echo 'VITE_API_URL=https://api.57.129.112.6' > frontend-admin/.env.production
+          echo 'VITE_API_URL=https://api.atbdigipack.duckdns.org' > frontend-admin/.env.production
           docker compose down
           docker compose up -d --build
           docker system prune -f

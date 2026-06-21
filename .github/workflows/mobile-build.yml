@@ -41,14 +41,14 @@ jobs:
 
       - name: Create .env file
         working-directory: ./frontend
-        run: echo "EXPO_PUBLIC_API_URL=https://api.57.129.112.6" > .env
+        run: echo "EXPO_PUBLIC_API_URL=https://api.atbdigipack.duckdns.org" > .env
 
       - name: Force production API URL in config.ts
         working-directory: ./frontend/src
         run: |
           cat > config.ts << 'EOF'
           const DEV_URL  = 'http://192.168.100.6:3000';
-          const PROD_URL = 'https://api.57.129.112.6';
+          const PROD_URL = 'https://api.atbdigipack.duckdns.org';
           
           export const API_URL = PROD_URL;
           
