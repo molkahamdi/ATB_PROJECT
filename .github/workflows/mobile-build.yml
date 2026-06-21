@@ -41,24 +41,20 @@ jobs:
 
       - name: Create .env file
         working-directory: ./frontend
-        run: echo "EXPO_PUBLIC_API_URL=http://57.129.112.6:3000" > .env
+        run: echo "EXPO_PUBLIC_API_URL=https://api.57.129.112.6" > .env
 
       - name: Force production API URL in config.ts
         working-directory: ./frontend/src
         run: |
           cat > config.ts << 'EOF'
-          // Configuration API - Forcé en production pour l'APK
           const DEV_URL  = 'http://192.168.100.6:3000';
-          const PROD_URL = 'http://57.129.112.6:3000';
+          const PROD_URL = 'https://api.57.129.112.6';
           
-          // Force l'utilisation de l'URL de production
           export const API_URL = PROD_URL;
           
           console.log(`[CONFIG] API_URL = ${API_URL}`);
           export default { API_URL };
           EOF
-          echo "✅ config.ts forcé avec URL production:"
-          cat config.ts
 
       - name: Create assets
         working-directory: ./frontend
