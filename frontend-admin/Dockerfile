@@ -7,7 +7,7 @@ RUN npm ci
 COPY . .
 
 # Créer le .env.production avec l'IP du serveur
-RUN echo "VITE_API_URL=http://57.129.112.6:3000" > .env.production
+RUN echo "VITE_API_URL=https://api.atbdigipack.duckdns.org" > .env.production
 
 RUN npm run build
 
