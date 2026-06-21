@@ -20,7 +20,7 @@ async function bootstrap() {
       'http://localhost:3001',
       'http://57.129.112.6',
       'http://57.129.112.6:80',
-       'https://atbdigipack.duckdns.org',
+  
       'http://57.129.112.6:5173',
       'http://57.129.112.6:3001',
        'http://10.0.2.2:8081',     // émulateur Android
