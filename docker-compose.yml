@@ -136,7 +136,7 @@ services:
     networks:
       - atb_network
 
-# ═══════════════════════════════════════
+  # ═══════════════════════════════════════
   #   LOGGING — Loki (stockage des logs)
   # ═══════════════════════════════════════
   loki:
@@ -152,6 +152,10 @@ services:
     command: -config.file=/etc/loki/local-config.yaml
     networks:
       - atb_network
+
+  # ═══════════════════════════════════════
+  #   REVERSE PROXY — Nginx (HTTPS)
+  # ═══════════════════════════════════════
   nginx:
     image: nginx:alpine
     container_name: atb_nginx
@@ -169,26 +173,8 @@ services:
       - prometheus
       - ocr-service
     networks:
-      - atb_network 
-  
-
-    image: nginx:alpine
-    container_name: atb_nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-    depends_on:
-      - frontend-admin
-      - backend
-      - grafana
-      - prometheus
-      - ocr-service
-    networks:
       - atb_network
+
   # ═══════════════════════════════════════
   #   LOGGING — Promtail (collecteur logs)
   # ═══════════════════════════════════════
@@ -210,6 +196,7 @@ volumes:
   prometheus_data:
   grafana_data:
   loki_data:
+
 networks:
   atb_network:
     driver: bridge
