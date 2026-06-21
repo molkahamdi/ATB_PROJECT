@@ -61,7 +61,8 @@ jobs:
           git pull origin main
           echo 'VITE_API_URL=https://api.atbdigipack.duckdns.org' > frontend-admin/.env.production
           docker compose down
-          docker compose up -d --build
+          docker compose build --no-cache frontend-admin
+          docker compose up -d
           docker system prune -f
           docker compose ps
           ENDSSH
