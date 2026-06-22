@@ -103,27 +103,56 @@ jobs:
         working-directory: ./frontend
         run: npx expo prebuild --platform android --clean --no-install
 
+      - name: Fix build.gradle for Expo FileSystem
+        working-directory: ./frontend/android/app
+        run: |
+          cat >> build.gradle << 'EOF'
+
+          android {
+              packagingOptions {
+                  pickFirst '**/libjsc.so'
+                  pickFirst '**/libc++_shared.so'
+                  pickFirst '**/libfbjni.so'
+                  pickFirst '**/libreanimated.so'
+                  pickFirst '**/libreact_nativemodule_core.so'
+                  pickFirst '**/libturbomodulejsijni.so'
+              }
+          }
+          EOF
+          echo "✅ packagingOptions added"
+
       - name: Add ProGuard rules for Expo FileSystem
         working-directory: ./frontend/android/app
         run: |
           cat >> proguard-rules.pro << 'EOF'
 
-          # Expo FileSystem
+          # Expo FileSystem - KEEP ALL CLASSES
           -keep class expo.modules.filesystem.** { *; }
           -keep class expo.modules.kotlin.** { *; }
           -keep class expo.modules.** { *; }
+          -keep class expo.** { *; }
+          -keep class host.exp.** { *; }
 
           # React Native
           -keep class com.facebook.react.** { *; }
           -keep class com.facebook.hermes.** { *; }
 
-          # Expo modules généraux
-          -keep @expo.modules.core.interfaces.Package class * { *; }
+          # Keep all annotations
+          -keepattributes *Annotation*
+          -keepattributes Signature
+
+          # Keep all exported functions
           -keepclassmembers class * {
               @expo.modules.core.ExportedFunction *;
+              @expo.modules.core.ExportedMethod *;
+              @expo.modules.kotlin.modules.ModuleDefinition *;
           }
+
+          # Don't warn about Expo
+          -dontwarn expo.**
+          -dontnote expo.**
           EOF
-          echo "✅ ProGuard rules added for Expo FileSystem"
+          echo "✅ Strong ProGuard rules added for Expo FileSystem"
 
       - name: Disable minification for Release build
         working-directory: ./frontend/android/app
