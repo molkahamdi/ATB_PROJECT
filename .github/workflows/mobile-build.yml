@@ -103,64 +103,61 @@ jobs:
         working-directory: ./frontend
         run: npx expo prebuild --platform android --clean --no-install
 
-      - name: Fix build.gradle for Expo FileSystem
-        working-directory: ./frontend/android/app
-        run: |
-          cat >> build.gradle << 'EOF'
-
-          android {
-              packagingOptions {
-                  pickFirst '**/libjsc.so'
-                  pickFirst '**/libc++_shared.so'
-                  pickFirst '**/libfbjni.so'
-                  pickFirst '**/libreanimated.so'
-                  pickFirst '**/libreact_nativemodule_core.so'
-                  pickFirst '**/libturbomodulejsijni.so'
-              }
-          }
-          EOF
-          echo "✅ packagingOptions added"
-
       - name: Add ProGuard rules for Expo FileSystem
         working-directory: ./frontend/android/app
         run: |
-          cat >> proguard-rules.pro << 'EOF'
-
-          # Expo FileSystem - KEEP ALL CLASSES
-          -keep class expo.modules.filesystem.** { *; }
-          -keep class expo.modules.kotlin.** { *; }
-          -keep class expo.modules.** { *; }
+          cat > proguard-rules.pro << 'EOF'
+          # Keep all Expo modules (CRITICAL for FileSystem)
           -keep class expo.** { *; }
           -keep class host.exp.** { *; }
-
-          # React Native
           -keep class com.facebook.react.** { *; }
           -keep class com.facebook.hermes.** { *; }
+          -keep class okhttp3.** { *; }
+          -keep class okio.** { *; }
+          -keep class javax.annotation.** { *; }
+          -keep class org.apache.commons.io.** { *; }
+          -keep class java.nio.file.** { *; }
 
-          # Keep all annotations
+          # Keep all FileSystem classes
+          -keep class expo.modules.filesystem.** { *; }
+          -keep class expo.modules.kotlin.services.FilePermissionService$Permission { *; }
+
+          # Keep annotations
           -keepattributes *Annotation*
           -keepattributes Signature
+          -keepattributes SourceFile
+          -keepattributes LineNumberTable
 
-          # Keep all exported functions
+          # Keep exported functions
           -keepclassmembers class * {
               @expo.modules.core.ExportedFunction *;
               @expo.modules.core.ExportedMethod *;
               @expo.modules.kotlin.modules.ModuleDefinition *;
           }
 
+          # Keep native method names
+          -keepclassmembers class * {
+              native <methods>;
+          }
+
           # Don't warn about Expo
           -dontwarn expo.**
           -dontnote expo.**
-          EOF
-          echo "✅ Strong ProGuard rules added for Expo FileSystem"
 
-      - name: Disable minification for Release build
+          # Keep React Native
+          -keep class com.facebook.react.turbomodule.** { *; }
+          -keep class com.facebook.react.bridge.** { *; }
+          -keep class com.facebook.react.uimanager.** { *; }
+          -keep class com.facebook.react.common.** { *; }
+          EOF
+          echo "✅ Complete ProGuard rules added for Expo FileSystem"
+
+      - name: Enable minification for Release build
         working-directory: ./frontend/android/app
         run: |
-          # Désactiver ProGuard (minification) pour garder toutes les classes natives
-          sed -i 's/minifyEnabled true/minifyEnabled false/' build.gradle
-          sed -i 's/shrinkResources true/shrinkResources false/' build.gradle 2>/dev/null || true
-          echo "✅ Minification disabled for Release build"
+          # Activer la minification pour Release (garder ProGuard actif)
+          sed -i 's/minifyEnabled false/minifyEnabled true/' build.gradle
+          echo "✅ Minification enabled for Release build"
 
       - name: Allow cleartext HTTP traffic in AndroidManifest.xml
         working-directory: ./frontend/android/app/src/main
